@@ -122,9 +122,13 @@ switch Action
                 
             end
 %             
+try
             legend(AxesHandle,[h1,h2,h3,h4],'complete','correct','left','right','Location','South','Orientation','horizontal')
             legend(AxesHandle,'boxoff')
-            
+   
+catch
+    disp('')
+end
             plot(AxesHandle,indxToPlot,0.5*ones(size(indxToPlot)),'k--')
 
         end

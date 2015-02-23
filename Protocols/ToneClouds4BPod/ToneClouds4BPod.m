@@ -46,9 +46,9 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     
     % Stimulus section
     S.GUI.UseMiddleOctave.panel = 'Stimulus settings'; S.GUI.UseMiddleOctave.style = 'popupmenu'; S.GUI.UseMiddleOctave.string = {'no', 'yes'}; S.GUI.UseMiddleOctave.value = 1;% Training stage
-    S.GUI.nTones.panel = 'Stimulus settings'; S.GUI.nTones.style = 'edit'; S.GUI.nTones.string = 10; % Number of tones
-    S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0.2; % Overlap between tones (0 to 1) 0 meaning no overlap
-    S.GUI.ToneDuration.panel = 'Stimulus settings'; S.GUI.ToneDuration.style = 'edit'; S.GUI.ToneDuration.string = 0.1;
+    S.GUI.nTones.panel = 'Stimulus settings'; S.GUI.nTones.style = 'edit'; S.GUI.nTones.string = 98; % Number of tones
+    S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0.66; % Overlap between tones (0 to 1) 0 meaning no overlap
+    S.GUI.ToneDuration.panel = 'Stimulus settings'; S.GUI.ToneDuration.style = 'edit'; S.GUI.ToneDuration.string = 0.03;
     S.GUI.NoEvidence.panel = 'Stimulus settings'; S.GUI.NoEvidence.style = 'edit'; S.GUI.NoEvidence.string = 0; % Number of tones with no evidence
     S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'AudibleHuman'; S.GUI.AudibleHuman.value = 1;
     
@@ -148,7 +148,8 @@ PsychToolboxSoundServer('Load', 4, EarlyWithdrawalSound);
 % Set soft code handler to trigger sounds
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler_PlaySound';
 
-uiwait(msgbox({'', ' Click OK when you are ready to start!     ', ''},'ToneCloud Protocol...'));
+BpodSystem.ProtocolFigures.InitialMsg = msgbox({'', ' Edit your settings and click OK when you are ready to start!     ', ''},'ToneCloud Protocol...');
+uiwait(BpodSystem.ProtocolFigures.InitialMsg);
 
 
 %% Main trial loop
@@ -169,7 +170,7 @@ for currentTrial = 1:MaxTrials
     
     R = GetValveTimes(S.GUI.RewardAmount.string, [1 3]); LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
     
-    SoundDuration = StimulusSettings.nTones*StimulusSettings.ToneDuration*StimulusSettings.ToneOverlap;
+    SoundDuration = (StimulusSettings.nTones-1)*StimulusSettings.ToneDuration*(1-StimulusSettings.ToneOverlap)+StimulusSettings.ToneDuration;
 
     if S.GUI.Antibias.value==2 %apply antibias
         if Outcomes(currentTrial-1)==0

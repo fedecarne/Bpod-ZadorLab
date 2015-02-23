@@ -69,13 +69,13 @@ switch Action
         evidence_ind = round(EvidenceStrength/bin_size);
         
         if evidence_ind(CurrentTrial)>0
-            ntrials = sum(evidence_ind==evidence_ind(CurrentTrial) & SideList(1:CurrentTrial)==SideList(CurrentTrial) & OutcomeRecord>=0);
-            ntrials_correct = sum(evidence_ind==evidence_ind(CurrentTrial) & SideList(1:CurrentTrial)==SideList(CurrentTrial) & OutcomeRecord==1);
+            ntrials = sum(evidence_ind==evidence_ind(CurrentTrial) & SideList(1:CurrentTrial)==SideList(CurrentTrial) & OutcomeRecord(1:CurrentTrial)>=0);
+            ntrials_correct = sum(evidence_ind==evidence_ind(CurrentTrial) & SideList(1:CurrentTrial)==SideList(CurrentTrial) & OutcomeRecord(1:CurrentTrial)==1);
             
             [p c] = binofit(ntrials_correct,ntrials);
         else
-            ntrials = sum(evidence_ind==0 & OutcomeRecord>=0);
-            ntrials_correct = sum(SideList(1:CurrentTrial)==1 && OutcomeRecord==1 || SideList(1:CurrentTrial)==0 && OutcomeRecord==0);
+            ntrials = sum(evidence_ind==0 & OutcomeRecord(1:CurrentTrial)>=0);
+            ntrials_correct = sum(SideList(1:CurrentTrial)==1 && OutcomeRecord(1:CurrentTrial)==1 || SideList(1:CurrentTrial)==0 && OutcomeRecord(1:CurrentTrial)==0);
             
             [p c] = binofit(ntrials_correct,ntrials);
         end
