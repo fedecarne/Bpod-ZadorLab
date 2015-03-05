@@ -62,7 +62,7 @@ switch Op
         uniqueParamPanel = unique(ParamPanel);
         nPanels = length(unique(ParamPanel));
         
-        Vsize = 20+(30*nValues)+70*(nPanels)+20;
+        Vsize = 20+(30*nValues)+70*(nPanels+1)+20;
         Width = 350;
         BpodSystem.ProtocolFigures.BpodParameterGUI = figure('Position', [100 280 Width Vsize],'name','Live Params','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
         
@@ -94,7 +94,7 @@ switch Op
             panel_y = panel_y - 30*(n_indx_in_panel+2.5);
         end
 
-
+        BpodSystem.GUIHandles.ParameterGUI.ParamValues(x+1) = uicontrol('Style', 'pushbutton', 'String', 'Sync with Server', 'Position', [25 panel_y-30*(2) Width-50 30*(2)], 'FontWeight', 'normal', 'FontSize', 12, 'BackgroundColor','white', 'FontName', 'Arial','Callback', @SyncWithServer);
 
         
     case 'sync'
