@@ -57,6 +57,7 @@ function PerformancePlot(AxesHandle, Action, varargin)
 % Adapted from BControl (PerformancePlotSection.m) 
 % Kachi O. 2014.Mar.17
 
+global BpodSystem
 global markersize NtrialsToPlot windowSizeToAverage ValidTrialsFractionVec PerformanceVec TrialType1Perf TrialType2Perf % makes these variable available to all cases 
 
 NtrialsToPlot = 100; %default number of trials to display
@@ -75,6 +76,10 @@ switch Action
          TrialType1Perf = nan(NtrialsToPlot,1);
          TrialType2Perf = nan(NtrialsToPlot,1);
          ValidTrialsFractionVec = nan(NtrialsToPlot,1);
+         
+         BpodSystem.GUIHandles.DeliveredWater = uicontrol('Style','text',...
+        'Position',[100 20 200 20], 'String',['Delivered Water: 0 ul'],'Fontsize',13);
+
          
     case 'update'
         lastTrial = varargin{1};
@@ -122,6 +127,8 @@ switch Action
                 
             end
 %             
+            BpodSystem.GUIHandles.DeliveredWater.String = ['Delivered Water: ' num2str(BpodSystem.Data.AccumulatedReward) ' ul'];
+
 try
             legend(AxesHandle,[h1,h2,h3,h4],'complete','correct','left','right','Location','South','Orientation','horizontal')
             legend(AxesHandle,'boxoff')

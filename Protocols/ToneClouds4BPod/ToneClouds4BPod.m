@@ -91,6 +91,7 @@ TrialTypes = ceil(rand(1,MaxTrials)*2); % correct side for each trial
 EvidenceStrength = nan(1,MaxTrials); % evidence strength for each trial
 PrestimDuration = nan(1,MaxTrials); % prestimulation delay period for each trial
 Outcomes = nan(1,MaxTrials);
+AccumulatedReward=0;
 
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 BpodSystem.Data.EvidenceStrength = []; % The evidence strength of each trial completed will be added here.
@@ -107,7 +108,8 @@ OutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',2-TrialTypes);
 BpodNotebook('init');
 
 % Performance
-BpodSystem.ProtocolFigures.PerformancePlotFig = figure('Position', [455 595 1000 163],'name','Performance plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+%BpodSystem.ProtocolFigures.PerformancePlotFig = figure('Position', [455 595 1000 163],'name','Performance plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+BpodSystem.ProtocolFigures.PerformancePlotFig = figure('Position', [455 595 1000 250],'name','Performance plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
 BpodSystem.GUIHandles.PerformancePlot = axes('Position', [.075 .3 .89 .6]);
 PerformancePlot(BpodSystem.GUIHandles.PerformancePlot,'init')  %set up axes nicely
 
@@ -562,11 +564,15 @@ for currentTrial = 1:MaxTrials
         %Outcome
         if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Reward(1))
             Outcomes(currentTrial) = 1;
+            AccumulatedReward = AccumulatedReward+S.GUI.RewardAmount.string;
         elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Punish(1))
             Outcomes(currentTrial) = 0;
         else
             Outcomes(currentTrial) = -1;
         end
+        
+        BpodSystem.Data.AccumulatedReward = AccumulatedReward;
+        
         
         UpdateOutcomePlot(TrialTypes, Outcomes);
         UpdatePerformancePlot(TrialTypes, Outcomes);
