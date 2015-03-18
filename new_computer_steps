@@ -1,0 +1,71 @@
+
+B-pod wiki: https://sites.google.com/site/bpoddocumentation/home
+
+Kepecs Lab folder: https://github.com/KepecsLab
+---
+
+these are the installation steps copied from the wiki
+
+installed sudo apt-get install linux-lowlatency
+
+installed psychtoolbox from this link: 
+
+Ubuntu archive (package octave-psychtoolbox-3)
+which opens a the ubuntu software manager
+
+run the matlab script DownloadAdditionsForLinux.m which is in the psychotoolbox folder
+
+---
+sudo apt-get install git
+
+git clone  https://github.com/fedecarne/Bpod-ZadorLab.git
+
+git pull
+
+in Matlab: add bpod folder to path
+
+(.gitignore data)
+---
+
+do: sudo usermod -a -G dialout "username"
+
+from terminal, launch the editor as root: sudo gedit
+
+Paste the following line into the text editor:
+
+-Dgnu.io.rxtx.SerialPorts=/dev/ttyS0:/dev/ttyS1:/dev/USB0:/dev/ttyACM0
+
+Save the file as java.opts to the following location:
+
+    /usr/local/MATLAB/R2011a/bin/glnxa64
+
+Set the sound subsystem to “no attenuation”. From terminal, run: alsamixer
+
+        Ensure that Card: shows Xonar DX
+
+        Select each slider *EXCEPT for the front L&R* and use the mouse scroll wheel to maximize (0dB gain)
+
+        Press “Esc” to save and exit.
+
+        Without this step, audio card sync pulses will not be sent.
+
+Restart matlab as root
+
+Run Bpod from the command prompt.
+
+
+----
+to synchronize data
+
+sudo apt-get install cifs-utils
+
+sudo mkdir /media/windowsshare
+
+//servername/sharename  /media/windowsshare  cifs  username=msusername,password=mspassword,iocharset=utf8,sec=ntlm  0  0
+
+sudo mount -a
+
+
+
+
+
