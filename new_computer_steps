@@ -1,71 +1,49 @@
+These steps are based on Josh Sanders's indications in https://sites.google.com/site/bpoddocumentation/installing-bpod/ubuntu14.Follow his suggestions for installing Bpod firmware.
 
-B-pod wiki: https://sites.google.com/site/bpoddocumentation/home
+1.Install Ubuntu:
+If the new computer has already Windows installed, you can keep it by making a dual Windows/Ubuntu boot. For that, shrink the Windows partition to a sensible size (100Gb) and select manually create partitions during Ubuntu instalation. Design your partition table by allocating space for swap, root and home.
 
-Kepecs Lab folder: https://github.com/KepecsLab
----
+2. Install the linux- lowlatency package: 
+Run sudo apt-get install linux-lowlatency
 
-these are the installation steps copied from the wiki
+3. Install Git:
+Run "sudo apt-get install git"
 
-installed sudo apt-get install linux-lowlatency
+4. Install Matlab
 
-installed psychtoolbox from this link: 
+5. Close Matlab. Open a terminal window and add yourself to the “dialout” group:
+    sudo usermod -a -G dialout "username"
 
-Ubuntu archive (package octave-psychtoolbox-3)
-which opens a the ubuntu software manager
-
-run the matlab script DownloadAdditionsForLinux.m which is in the psychotoolbox folder
-
----
-sudo apt-get install git
-
-git clone  https://github.com/fedecarne/Bpod-ZadorLab.git
-
-git pull
-
-in Matlab: add bpod folder to path
-
-(.gitignore data)
----
-
-do: sudo usermod -a -G dialout "username"
-
-from terminal, launch the editor as root: sudo gedit
-
+6. Explain to MATLAB that /dev/ttyACMx are valid serial ports:
+from terminal, launch the editor as root. Run: sudo gedit
 Paste the following line into the text editor:
 
--Dgnu.io.rxtx.SerialPorts=/dev/ttyS0:/dev/ttyS1:/dev/USB0:/dev/ttyACM0
+    -Dgnu.io.rxtx.SerialPorts=/dev/ttyS0:/dev/ttyS1:/dev/USB0:/dev/ttyACM0
 
 Save the file as java.opts to the following location:
 
     /usr/local/MATLAB/R2011a/bin/glnxa64
 
-Set the sound subsystem to “no attenuation”. From terminal, run: alsamixer
+7. Set the sound subsystem to “no attenuation”:
+From terminal, run: alsamixer
+Ensure that Card: shows Xonar DX. Select each slider *EXCEPT for the front L&R* and use the mouse scroll wheel to maximize (0dB gain)
+Press “Esc” to save and exit. Without this step, audio card sync pulses will not be sent.
 
-        Ensure that Card: shows Xonar DX
+8. Clone the Bpod-ZadorLab folder from github. Open a Terminal and run:
+git clone  https://github.com/fedecarne/Bpod-ZadorLab.git.
+git pull
 
-        Select each slider *EXCEPT for the front L&R* and use the mouse scroll wheel to maximize (0dB gain)
+9. Add Bpod-ZadorLab to Matlab path
+(.gitignore data)
 
-        Press “Esc” to save and exit.
+10. Install PsychToolbox package "octave-psychtoolbox-3" from http://psychtoolbox.org/download/#Linux
+which opens from the Ubuntu Software Manager. Then run the Matlab script DownloadAdditionsForLinux.m which is in the psychotoolbox folder.
 
-        Without this step, audio card sync pulses will not be sent.
-
-Restart matlab as root
-
-Run Bpod from the command prompt.
-
-
-----
-to synchronize data
-
+11. If you have a Windows server in which to synchronize data from several rigs. 
+Get the name of the server (servername) and the name of the folder in which you want your data (sharename) and run:
 sudo apt-get install cifs-utils
-
 sudo mkdir /media/windowsshare
-
 //servername/sharename  /media/windowsshare  cifs  username=msusername,password=mspassword,iocharset=utf8,sec=ntlm  0  0
-
 sudo mount -a
-
-
-
 
 
