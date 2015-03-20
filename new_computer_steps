@@ -9,18 +9,16 @@ Run sudo apt-get install linux-lowlatency
 3. Install Git:
 Run "sudo apt-get install git"
 
-
-8. Clone the Bpod-ZadorLab folder from github. Open a Terminal and run:
+4. Clone the Bpod-ZadorLab folder from github. Open a Terminal and run:
 git clone  https://github.com/fedecarne/Bpod-ZadorLab.git.
 git pull
 
+5. Install Matlab
 
-4. Install Matlab
-
-5. Close Matlab. Open a terminal window and add yourself to the “dialout” group:
+6. Close Matlab. Open a terminal window and add yourself to the “dialout” group:
     sudo usermod -a -G dialout "username"
 
-6. Explain to MATLAB that /dev/ttyACMx are valid serial ports:
+7. Explain to MATLAB that /dev/ttyACMx are valid serial ports:
 from terminal, launch the editor as root. Run: sudo gedit
 Paste the following line into the text editor:
 
@@ -30,24 +28,39 @@ Save the file as java.opts to the following location:
 
     /usr/local/MATLAB/R2014b/bin/glnxa64
 
-7. Set the sound subsystem to “no attenuation”:
+8. Set the sound subsystem to “no attenuation”:
 From terminal, run: alsamixer
 Ensure that Card: shows Xonar DX. Select each slider *EXCEPT for the front L&R* and use the mouse scroll wheel to maximize (0dB gain)
 Press “Esc” to save and exit. Without this step, audio card sync pulses will not be sent.
 
+9. Install PsychToolbox package "octave-psychtoolbox-3" from http://psychtoolbox.org/download/#Linux
+which opens from the Ubuntu Software Manager. Then in Matlab go to usr/local/share/psychotoolbox-3/ and run DownloadAdditionsForLinux(pwd).
 
-
-9. Add Bpod-ZadorLab to Matlab path
-(.gitignore data)
-
-10. Install PsychToolbox package "octave-psychtoolbox-3" from http://psychtoolbox.org/download/#Linux
-which opens from the Ubuntu Software Manager. Then run the Matlab script DownloadAdditionsForLinux.m which is in the psychotoolbox folder.
+10. Add Bpod-ZadorLab to Matlab path
 
 11. If you have a Windows server in which to synchronize data from several rigs. 
 Get the name of the server (servername) and the name of the folder in which you want your data (sharename) and run:
 sudo apt-get install cifs-utils
 sudo mkdir /media/windowsshare
-//servername/sharename  /media/windowsshare  cifs  username=msusername,password=mspassword,iocharset=utf8,sec=ntlm  0  0
+
+gedit ~/.smbcredentials
+
+Enter your Windows username and password in the file:
+
+username=msusername
+password=mspassword
+
+Close Editor. Run
+
+sudo gedit /etc/fstab 
+
+Add this line
+
+//servername/sharename /media/windowsshare cifs credentials=/home/ubuntuusername/.smbcredentials,iocharset=utf8,sec=ntlm 0 0 
+
+Finally, test the fstab entry by issuing
+
 sudo mount -a
 
+If there are no errors, you should test how it works after a reboot. Your remote share should mount automatically. 
 

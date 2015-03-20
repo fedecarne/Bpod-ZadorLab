@@ -131,12 +131,12 @@ BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.075 .3 .89 .6]);
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'init')  %set up axes nicely
 
 %% Repositionate GUI's
-BpodSystem.GUIHandles.MainFig.Position = [423 395 BpodSystem.GUIHandles.MainFig.Position(3:4)];
-BpodSystem.ProtocolFigures.Notebook.Position = [175 15 BpodSystem.ProtocolFigures.Notebook.Position(3:4)];
-BpodSystem.ProtocolFigures.BpodParameterGUI.Position = [66 330 BpodSystem.ProtocolFigures.BpodParameterGUI.Position(3:4)];
-BpodSystem.ProtocolFigures.PerformancePlotFig.Position = [418 795 BpodSystem.ProtocolFigures.PerformancePlotFig.Position(3:4)];
-BpodSystem.ProtocolFigures.OutcomePlotFig.Position = [418 986 BpodSystem.ProtocolFigures.OutcomePlotFig.Position(3:4)];
-BpodSystem.ProtocolFigures.PsychoPlotFig.Position = [821 33 BpodSystem.ProtocolFigures.PsychoPlotFig.Position(3:4)];
+BpodSystem.GUIHandles.MainFig.Position = [389 92 BpodSystem.GUIHandles.MainFig.Position(3:4)];
+BpodSystem.ProtocolFigures.Notebook.Position = [229 -1.5 BpodSystem.ProtocolFigures.Notebook.Position(3:4)];
+BpodSystem.ProtocolFigures.BpodParameterGUI.Position = [66 1 BpodSystem.ProtocolFigures.BpodParameterGUI.Position(3:4)];
+BpodSystem.ProtocolFigures.PerformancePlotFig.Position = [705 533 BpodSystem.ProtocolFigures.PerformancePlotFig.Position(3:4)];
+BpodSystem.ProtocolFigures.OutcomePlotFig.Position = [705 832 BpodSystem.ProtocolFigures.OutcomePlotFig.Position(3:4)];
+BpodSystem.ProtocolFigures.PsychoPlotFig.Position = [1196 193 BpodSystem.ProtocolFigures.PsychoPlotFig.Position(3:4)];
 
 
 %% Define stimuli and send to sound server

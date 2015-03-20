@@ -1,5 +1,6 @@
 #Exclude local data
-Data
+Data/
+Calibration Files/
 
 #################
 ## Eclipse
