@@ -9,6 +9,12 @@ Run sudo apt-get install linux-lowlatency
 3. Install Git:
 Run "sudo apt-get install git"
 
+
+8. Clone the Bpod-ZadorLab folder from github. Open a Terminal and run:
+git clone  https://github.com/fedecarne/Bpod-ZadorLab.git.
+git pull
+
+
 4. Install Matlab
 
 5. Close Matlab. Open a terminal window and add yourself to the “dialout” group:
@@ -22,16 +28,14 @@ Paste the following line into the text editor:
 
 Save the file as java.opts to the following location:
 
-    /usr/local/MATLAB/R2011a/bin/glnxa64
+    /usr/local/MATLAB/R2014b/bin/glnxa64
 
 7. Set the sound subsystem to “no attenuation”:
 From terminal, run: alsamixer
 Ensure that Card: shows Xonar DX. Select each slider *EXCEPT for the front L&R* and use the mouse scroll wheel to maximize (0dB gain)
 Press “Esc” to save and exit. Without this step, audio card sync pulses will not be sent.
 
-8. Clone the Bpod-ZadorLab folder from github. Open a Terminal and run:
-git clone  https://github.com/fedecarne/Bpod-ZadorLab.git.
-git pull
+
 
 9. Add Bpod-ZadorLab to Matlab path
 (.gitignore data)

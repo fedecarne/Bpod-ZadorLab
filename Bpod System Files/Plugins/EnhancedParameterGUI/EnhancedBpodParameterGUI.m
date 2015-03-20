@@ -63,38 +63,55 @@ switch Op
         nPanels = length(unique(ParamPanel));
         
         Vsize = 20+(30*nValues)+70*(nPanels+1)+20;
-        Width = 350;
-        BpodSystem.ProtocolFigures.BpodParameterGUI = figure('Position', [100 280 Width Vsize],'name','Live Params','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+        Width = 300;
+        
+        screensize = get( groot, 'Screensize');
+        nColumns = ceil(Vsize/screensize(4));
+        if nColumns>1
+            Vsize = screensize(4);            
+        end
+        
+        
+        BpodSystem.ProtocolFigures.BpodParameterGUI = figure('Position', [100 280 nColumns*Width+20 Vsize],'name','Live Params','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
         
         BpodSystem.GUIHandles.ParameterGUI = struct;
         BpodSystem.GUIHandles.ParameterGUI.ParamNames = ParamNames;
         BpodSystem.GUIHandles.ParameterGUI.LastParamValues = ParamValues;
         BpodSystem.GUIHandles.ParameterGUI.Labels = zeros(1,nValues);
         
-        
-        panel_y = Vsize-20;
+        BpodSystem.GUIHandles.ParameterGUI.SyncWithServer = uicontrol('Style', 'pushbutton', 'String', 'Sync with Server', 'Position', [30 Vsize-160 Width-50 60], 'FontWeight', 'normal', 'FontSize', 12, 'BackgroundColor','white', 'FontName', 'Arial','Callback', @SyncWithServer);
+
+        column = 1;
+        panel_y = Vsize-180;
         Pos = panel_y-70;
         for i=1:nPanels
-            
+                        
             % Elements in this panel
             indx_in_panel = find(strcmp(ParamPanel,uniqueParamPanel{i}));
             n_indx_in_panel = length(indx_in_panel);
             
-            panel(i) = uipanel('title', uniqueParamPanel{i},'FontSize',12, 'BackgroundColor','white','Units','Pixels', 'Position',[25 panel_y-30*(n_indx_in_panel+2) Width-50 30*(n_indx_in_panel+2)]);
+            if panel_y-30*(n_indx_in_panel+2)<0
+                column = column +1;
+                panel_y = Vsize-100;
+                Pos = panel_y-70;
+            end
+            
+            panel(i) = uipanel('title', uniqueParamPanel{i},'FontSize',12, 'BackgroundColor','white','Units','Pixels', 'Position',[10+(column-1)*(Width+5) panel_y-30*(n_indx_in_panel+2) Width 30*(n_indx_in_panel+2)]);
             
             
             for j=1:length(indx_in_panel)
                 
                 x = indx_in_panel(j);
-                BpodSystem.GUIHandles.ParameterGUI.Labels(x) = uicontrol('Style', 'text', 'String', ParamNames{x}, 'Position', [25+10 Pos 1/2*(Width-50) 25], 'FontWeight', 'normal', 'FontSize', 12, 'BackgroundColor','white', 'FontName', 'Arial');
-                BpodSystem.GUIHandles.ParameterGUI.ParamValues(x) = uicontrol('Style', ParamStyle{1,x}, 'String', ParamString{x}, 'Position', [25+20+3/5*(Width-50) Pos+5 0.3*(Width-50) 25], 'FontWeight', 'normal', 'FontSize', 12, 'FontName', 'Arial');
+                BpodSystem.GUIHandles.ParameterGUI.Labels(x) = uicontrol('Style', 'text', 'String', ParamNames{x}, 'Position', [11+(column-1)*(Width+5) Pos 2/3*(Width) 25], 'FontWeight', 'normal', 'FontSize', 12, 'BackgroundColor','white', 'FontName', 'Arial','HorizontalAlignment','Center');
+                BpodSystem.GUIHandles.ParameterGUI.ParamValues(x) = uicontrol('Style', ParamStyle{1,x}, 'String', ParamString{x}, 'Position', [10+(column-1)*(Width+5)+Width-1/3*Width Pos+5 1/4*Width 25], 'FontWeight', 'normal', 'FontSize', 12, 'FontName', 'Arial');
                 Pos = Pos - 30;
             end            
             Pos = Pos - 70;
             panel_y = panel_y - 30*(n_indx_in_panel+2.5);
         end
+        
 
-        BpodSystem.GUIHandles.ParameterGUI.ParamValues(x+1) = uicontrol('Style', 'pushbutton', 'String', 'Sync with Server', 'Position', [25 panel_y-30*(2) Width-50 30*(2)], 'FontWeight', 'normal', 'FontSize', 12, 'BackgroundColor','white', 'FontName', 'Arial','Callback', @SyncWithServer);
+        
 
         
     case 'sync'
@@ -102,6 +119,15 @@ switch Op
         nValues = length(BpodSystem.GUIHandles.ParameterGUI.LastParamValues);
         for x = 1:nValues            
             switch Params.GUI.(ParamNames{x}).style
+                case 'text'
+                    thisParamGUIValue = str2double(get(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String'));
+                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x);
+                    thisParamInputValue = Params.GUI.(ParamNames{x}).string;
+                    if thisParamGUIValue == thisParamLastValue % If the user didn't change the GUI, the GUI can be changed from the input.
+                        set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String', sprintf('%g',thisParamInputValue));
+                        thisParamGUIValue = thisParamInputValue;
+                    end
+                    Params.GUI.(BpodSystem.GUIHandles.ParameterGUI.ParamNames{x}).string = thisParamGUIValue;
                 case 'edit'
                     thisParamGUIValue = str2double(get(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String'));
                     thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x);

@@ -80,6 +80,14 @@ switch Action
          BpodSystem.GUIHandles.DeliveredWater = uicontrol('Style','text',...
         'Position',[100 20 200 20], 'String',['Delivered Water: 0 ul'],'Fontsize',13);
 
+         BpodSystem.GUIHandles.ValidTrials = uicontrol('Style','text',...
+        'Position',[300 20 200 20], 'String',['Valid trials: 0'],'Fontsize',13);
+    
+         BpodSystem.GUIHandles.CorrectTrials = uicontrol('Style','text',...
+        'Position',[500 20 200 20], 'String',['Correct trials: 0'],'Fontsize',13);
+    
+         BpodSystem.GUIHandles.TotalTrials = uicontrol('Style','text',...
+        'Position',[700 20 200 20], 'String',['Total trials: 0 '],'Fontsize',13);
          
     case 'update'
         lastTrial = varargin{1};
@@ -126,9 +134,14 @@ switch Action
                 h4 = plot(AxesHandle,indxToPlot,TrialType2Perf(indxToPlot),'s','MarkerFaceColor',colors(4,:),'MarkerEdgeColor', colors(4,:),'MarkerSize',markersize); %plot
                 
             end
-%             
+            
             BpodSystem.GUIHandles.DeliveredWater.String = ['Delivered Water: ' num2str(BpodSystem.Data.AccumulatedReward) ' ul'];
-
+            
+            BpodSystem.GUIHandles.ValidTrials.String = ['Valid trials: ' num2str(nansum(OutcomeRecord >= 0))];
+            
+            BpodSystem.GUIHandles.CorrectTrials.String = ['Correct trials: ' num2str(nansum(OutcomeRecord > 0))];
+            
+            BpodSystem.GUIHandles.TotalTrials.String = ['Total trials: ' num2str(sum(~isnan(OutcomeRecord)))];
 try
             legend(AxesHandle,[h1,h2,h3,h4],'complete','correct','left','right','Location','South','Orientation','horizontal')
             legend(AxesHandle,'boxoff')
