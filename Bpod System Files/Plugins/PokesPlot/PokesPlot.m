@@ -1,16 +1,11 @@
 % [x, y] = PokesPlotSection(obj, action, [arg1], [arg2])
 
-function varargout = PokesPlot(varargin)
+function PokesPlot(varargin)
 
 global BpodSystem
     
-empty_trial_info = ...
-  struct('start_time', [], 'align_time', [], 'align_found', [], 'ydelta', [], 'visible', [], ...
-  'ghandles', [], 'select_value', [], 'mainsort_value', [], 'subsort_value', []);
-    
 action = varargin{1};
-state_colors = varargin{2};
-poke_colors = varargin{3};
+
 
 
 switch action
@@ -18,30 +13,46 @@ switch action
     %% init    
     case 'init'
         
-        BpodSystem.ProtocolFigures.PokesPlot = figure('Position', [100 280 300 1000],'name','PokesPlot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
-        
-        if length(varargin) < 2,
-            scolors = struct('states', [], 'pokes', []);
-        end;               
+        state_colors = varargin{2};
+        poke_colors = varargin{3};
 
-        BpodSystem.GUIHandles.PokesPlot.AlignOnMenu = uicontrol('Style', 'popupmenu', 'String', fields(state_colors), 'Position', [30 70 150 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'alignon'});
+        BpodSystem.ProtocolFigures.PokesPlot = figure('Position', [100 280 300 700],'name','PokesPlot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
+
+        BpodSystem.GUIHandles.PokesPlot.StateColors= state_colors;
+        BpodSystem.GUIHandles.PokesPlot.PokeColors= poke_colors;
+
         
-        BpodSystem.GUIHandles.PokesPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','t0', 'Position', [30 35 40 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
-        BpodSystem.GUIHandles.PokesPlot.LeftEdge = uicontrol('Style', 'edit','String',0, 'Position', [90 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
+        BpodSystem.GUIHandles.PokesPlot.AlignOnLabel = uicontrol('Style', 'text','String','align on:', 'Position', [30 70 60 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
+        BpodSystem.GUIHandles.PokesPlot.AlignOnMenu = uicontrol('Style', 'popupmenu','Value',2, 'String', fields(state_colors), 'Position', [95 70 150 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'alignon'});
         
-        BpodSystem.GUIHandles.PokesPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','t1', 'Position', [30 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
-        BpodSystem.GUIHandles.PokesPlot.RightEdge = uicontrol('Style', 'edit','String',10, 'Position', [90 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
+        BpodSystem.GUIHandles.PokesPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','start', 'Position', [30 35 40 20], 'FontWeight', 'normal', 'FontSize', 10,'FontName', 'Arial');
+        BpodSystem.GUIHandles.PokesPlot.LeftEdge = uicontrol('Style', 'edit','String',-3, 'Position', [75 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
+        
+        BpodSystem.GUIHandles.PokesPlot.LeftEdgeLabel = uicontrol('Style', 'text','String','end', 'Position', [30 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
+        BpodSystem.GUIHandles.PokesPlot.RightEdge = uicontrol('Style', 'edit','String',10, 'Position', [75 10 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
          
-        BpodSystem.GUIHandles.PokesPlot.LastnLabel = uicontrol('Style', 'text','String','N trials', 'Position', [140 35 50 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
-        BpodSystem.GUIHandles.PokesPlot.LastnLabel = uicontrol('Style', 'edit','String',10, 'Position', [200 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
+        BpodSystem.GUIHandles.PokesPlot.LastnLabel = uicontrol('Style', 'text','String','N trials', 'Position', [130 33 50 20], 'FontWeight', 'normal', 'FontSize', 10, 'FontName', 'Arial');
+        BpodSystem.GUIHandles.PokesPlot.Lastn = uicontrol('Style', 'edit','String',10, 'Position', [185 35 40 20], 'FontWeight', 'normal', 'FontSize', 10, 'BackgroundColor','white', 'FontName', 'Arial','Callback', {@PokesPlot, 'time_axis'});
         
         BpodSystem.GUIHandles.PokesPlot.PokesPlotAxis = axes('Position', [0.1 0.38 0.8 0.54],'Color', 0.3*[1 1 1]);
 
-        BpodSystem.GUIHandles.PokesPlot.ColorAxis = axes('Position', [0.15 0.29 0.7 0.03]);
-                
+        
         fnames = fieldnames(state_colors);
-        for i=1:length(fnames),
-            fill([i-0.9 i-0.9 i-0.1 i-0.1], [0 1 1 0], state_colors.(fnames{i}));
+        for j=1:str2double(BpodSystem.GUIHandles.PokesPlot.Lastn.String)
+            for i=1:length(fnames)
+                BpodSystem.GUIHandles.PokesPlot.StateHandle(j).(fnames{i}) = fill([(i-1) (i-1)+2 (i-1)+2 (i-1)],[(j-1) (j-1) (j-1)+1 (j-1)+1],state_colors.(fnames{i}));
+                BpodSystem.GUIHandles.PokesPlot.StateHandle(j).(fnames{i}).Visible = 'off';
+                hold on;
+            end
+        end
+        
+        axis([str2double(BpodSystem.GUIHandles.PokesPlot.LeftEdge.String) str2double(BpodSystem.GUIHandles.PokesPlot.RightEdge.String) 0 length(fnames)-1])
+        
+        BpodSystem.GUIHandles.PokesPlot.ColorAxis = axes('Position', [0.15 0.29 0.7 0.03]);
+         
+        fnames = fieldnames(state_colors);
+        for i=1:length(fnames)
+            fill([i-0.9 i-0.9 i-0.1 i-0.1], [0 1 1 0], state_colors.(fnames{i}),'EdgeColor','none');
             if length(fnames{i})< 10
                 legend = fnames{i};
             else
@@ -52,128 +63,47 @@ switch action
             set(gca, 'Visible', 'off');
         end;
         ylim([0 1]); xlim([0 length(fnames)]);
-
+        
+        
   %% update    
   case 'update'
       
-%       % We initialize a new trial once it's started, so as to have access to its start time:
-%       if length(trial_info) < n_started_trials,
-%           initialize_trial(n_started_trials, parsed_events, value(my_state_colors), value(alignon), trial_info);
-%       end;
-      
-      time = dispatcher('get_time');
-      update_already_started_trial(dispatcher('get_time'), ...
-          n_started_trials, parsed_events, latest_parsed_events, ...
-          value(my_state_colors), value(alignon), value(axpokesplot), trial_info);
-      
-      
-      set(value(axpokesplot), 'XLim', [value(t0) value(t1)]);
-      set_ylimits(n_started_trials, value(axpokesplot), value(trial_limits), ...
-          value(start_trial), value(end_trial), value(ntrials));
-      
-      drawnow;
-
-%% trial_completed
-  case 'trial_completed'
-      
-      trial_info(n_done_trials).visible = trial_selection(value(trial_selector), parsed_events);
-      trial_info(n_done_trials).ydelta  = 0;
-      if trial_info(n_done_trials).visible == 0,
-          for guys = {'states' 'pokes'},
-              fnames = fieldnames(trial_info(n_done_trials).ghandles.(guys{1}));
-              for j=1:length(fnames),
-                  ghandles = trial_info(n_done_trials).ghandles.(guys{1}).(fnames{j});
-                  set(ghandles, 'Visible', 'off');
-              end;
-          end;
-      end;
-      
-      if collapse_selection==1,
-          last_yposition_drawn = value(last_ypos_drawn);
-          if trial_info(n_done_trials).visible == 1,
-              last_yposition_drawn = last_yposition_drawn + 1;
-              if isempty(trial_info(n_done_trials).ydelta), trial_info(n_done_trials).ydelta = 0; end;
-              delta = n_done_trials + trial_info(n_done_trials).ydelta - last_yposition_drawn;
-              vertical_shift(trial_info(n_done_trials).ghandles, -delta);
-              trial_info(n_done_trials).ydelta = trial_info(n_done_trials).ydelta - delta; %#ok<NASGU> (This line OK.)
-          end;
-          last_ypos_drawn.value = last_yposition_drawn;
-      end;
-
-      
-%% alignon
-  case 'alignon'
-      
-      g = value(trial_info(1:n_started_trials)); %#ok<NODEF> (defined by GetSoloFunctionArgs)
-      [X{1:n_started_trials}] = deal(g.align_time);
-      old_align_times = cell2mat(X);
-      for i=1:min(n_started_trials, length(parsed_events_history))
-          % First, see whether we can get the new alignment time:
-          if i<n_started_trials, pevs = parsed_events_history{i};
-          else                   pevs = parsed_events;
-          end;
-          atime = find_align_time(value(alignon), pevs); %#ok<NODEF> (defined by GetSoloFunctionArgs)
-          
-          % If we can't find the alignment time for a trial, align it on trial
-          % start:
-          if ~isnan(atime), trial_info(i).align_found = 1;
-          else              trial_info(i).align_found = 0; atime = trial_info(i).start_time;
-          end;
-          trial_info(i).align_time = atime;
-          
-          % delta is how much we have to shift the plots by
-          delta = atime - old_align_times(i);
-          if delta ~= 0,
-              % Now shift the x position of all of this trial's graphics handles
-              ghandles = trial_info(i).ghandles;
-              for guy = {'states' 'pokes'},
-                  fnames = fieldnames(ghandles.(guy{1}));
-                  for j=1:length(fnames),
-                      gh = ghandles.(guy{1}).(fnames{j});
-                      if all(ishandle(gh)), % Only try it if the handles are vald
-                          for k=1:length(gh), set(gh(k), 'XData', get(gh(k), 'XData') - delta); end;
-                      end;
-                  end; % for j
-              end; % for guy
-              if isfield(ghandles, 'spikes') && ~isempty(ghandles.spikes) && ishandle(ghandles.spikes),
-                  set(ghandles.spikes, 'XData', get(ghandles.spikes, 'XData') - delta);
-              end;
-          end;
-      end;
-      
+    figure(BpodSystem.ProtocolFigures.PokesPlot);axes(BpodSystem.GUIHandles.PokesPlot.PokesPlotAxis)
+    current_trial = BpodSystem.Data.nTrials;
+    last_n = str2double(BpodSystem.GUIHandles.PokesPlot.Lastn.String);
+    
+    fnames = fieldnames(BpodSystem.Data.RawEvents.Trial{1,BpodSystem.Data.nTrials}.States);
+    
+    %fnames = fieldnames(BpodSystem.GUIHandles.PokesPlot.StateHandle(current_trial));
+    
+    for j=1:last_n
         
-%% time_axes
-  case 'time_axis'
-      
-    set(value(axpokesplot), 'XLim', [value(t0) value(t1)]);
-   
-
+        trial_toplot = current_trial-j+1;
+        
+        if trial_toplot>0
+            
+            aligning_time = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(BpodSystem.GUIHandles.PokesPlot.AlignOnMenu.String{BpodSystem.GUIHandles.PokesPlot.AlignOnMenu.Value});
+            
+            for i=1:length(fnames)
+                
+                t = BpodSystem.Data.RawEvents.Trial{trial_toplot}.States.(fnames{i})-aligning_time(1);
+                x_vertices = [t(1) t(2) t(2) t(1)]';
+                y_vertices = [repmat(last_n-j,1,2) repmat(last_n-j+1,1,2)]';
+                
+                if ~isfield(BpodSystem.GUIHandles.PokesPlot.StateHandle(current_trial),fnames{i}) %if the field was not initialized, paint it white
+                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}) = fill([0 0 0 0],[0 0 0 0],[1 1 1]);
+                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}).Vertices = [x_vertices y_vertices];
+                end
+                
+                if isempty(BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1)) % if the number of trial to plot (last_n) is changed from the gui.
+                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}) = fill([0 0 0 0],[0 0 0 0],BpodSystem.GUIHandles.PokesPlot.StateColors.(fnames{i}));
+                end                
+                BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}).Vertices = [x_vertices y_vertices];
+                BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}).Visible = 'on';
+            end
+        end
+    end
+    
+    BpodSystem.GUIHandles.PokesPlot.PokesPlotAxis.XLim = [str2double(BpodSystem.GUIHandles.PokesPlot.LeftEdge.String) str2double(BpodSystem.GUIHandles.PokesPlot.RightEdge.String)];
+    BpodSystem.GUIHandles.PokesPlot.PokesPlotAxis.YLim = [0 last_n+1];
 end;
-
-
-
-
-
-% ------------------------------------------------------------------
-%
-%              FUNCTION LATEST_TIME
-%
-% ------------------------------------------------------------------
-
-
-function [t] = latest_time(pe)
-
-   states = rmfield(rmfield(pe.states, 'starting_state'), 'ending_state');
-   pokes  = rmfield(rmfield(pe.pokes,  'starting_state'), 'ending_state');
-   
-   states = struct2cell(states);
-   pokes  = struct2cell(pokes);
-   
-   ts = [];
-   for i=1:length(states), ts = [ts ; states{i}(:)]; end;
-   for i=1:length(pokes), ts = [ts ; pokes{i}(:)]; end;
-   ts = ts(~isnan(ts));
-   
-   if isempty(ts), t = 10000; 
-   else            t = max(ts);
-   end;

@@ -130,7 +130,7 @@ BpodSystem.ProtocolFigures.PsychoPlotFig = figure('Position', [1450 100 400 300]
 BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.075 .3 .89 .6]);
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'init')  %set up axes nicely
 
-
+%%% pokes plot
 state_colors = struct( ...
         'WaitForCenterPoke', [0.5 0.5 1],...
         'Delay',[1,0,0],...
@@ -139,6 +139,7 @@ state_colors = struct( ...
         'Reward',[0,1,0],...
         'Drinking',[1,0,0],...
         'Punish',[1,0,0],...
+        'EarlyWithdrawal',[1,0.3,0],...
         'EarlyWithdrawalPunish',[1,0,0],...
         'WaitForResponse',[1,0,0],...
         'CorrectWithdrawalEvent',[1,0,0],...
@@ -198,6 +199,7 @@ for currentTrial = 1:MaxTrials
     
     if S.GUI.AudibleHuman.value, minFreq = 200; maxFreq = 2000; else minFreq = 5000; maxFreq = 40000; end
     
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Prestimulation Duration
     if S.GUI.SoundDurationCurrent.string >= S.GUI.SoundDurationEnd.string % step up prestim only if stimulus is already at end duration
         
@@ -222,21 +224,29 @@ for currentTrial = 1:MaxTrials
         case 3
             PrestimDuration(currentTrial) = exprnd(S.GUI.PrestimDurationCurrent.string);
     end
-        
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Sound Duration
-    if controlStep_Sound > controlStep_nRequiredValid_Sound
-        
-        controlStep_Sound = 0; %restart counter
-        
-        % step up, unless we are at the max
-        if S.GUI.SoundDurationCurrent.string + S.GUI.SoundDurationStep.string > S.GUI.SoundDurationEnd.string
-            S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationEnd.string;
-        else
-            S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationCurrent.string + S.GUI.SoundDurationStep.string;
+    
+    if S.GUI.SoundDurationStart.string<S.GUI.SoundDurationEnd.string
+        if controlStep_Sound > controlStep_nRequiredValid_Sound
+
+            controlStep_Sound = 0; %restart counter
+
+            % step up, unless we are at the max
+            if S.GUI.SoundDurationCurrent.string + S.GUI.SoundDurationStep.string > S.GUI.SoundDurationEnd.string
+                S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationEnd.string;
+            else
+                S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationCurrent.string + S.GUI.SoundDurationStep.string;
+            end
         end
+    else
+       S.GUI.SoundDurationCurrent.string =  S.GUI.SoundDurationStart.string;
     end
         
     SoundDuration(currentTrial) = S.GUI.SoundDurationCurrent.string;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     R = GetValveTimes(S.GUI.RewardAmount.string, [1 3]); LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
     C = GetValveTimes(S.GUI.CenterRewardAmount.string, 2); CenterValveTime = C(1);
@@ -314,16 +324,24 @@ for currentTrial = 1:MaxTrials
                 'OutputActions', {});
             sma = AddState(sma, 'Name', 'DeliverStimulus', ...
                 'Timer', SoundDuration(currentTrial),...
-                'StateChangeConditions', {'Tup', 'GoSignal'},...
+                'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
                 'OutputActions', {'SoftCode', 1, 'BNCState', 1});
             sma = AddState(sma, 'Name', 'GoSignal', ...
                 'Timer', CenterValveTime,...
                 'StateChangeConditions', {'Tup', 'Reward'},...
                 'OutputActions', {'ValveState', CenterValveCode});
+            sma = AddState(sma, 'Name', 'EarlyWithdrawal', ...
+                'Timer', 0,...
+                'StateChangeConditions', {'Tup', 'Punish'},...
+                'OutputActions', {});
             sma = AddState(sma, 'Name', 'Reward', ...
                 'Timer', ValveTime,...
                 'StateChangeConditions', {'Tup', 'Drinking'},...
                 'OutputActions', {'ValveState', ValveCode});
+            sma = AddState(sma, 'Name', 'Punish', ...
+                'Timer', 0,...
+                'StateChangeConditions', {'Tup', 'exit'},...
+                'OutputActions', {});
             sma = AddState(sma, 'Name', 'Drinking', ...
                 'Timer', 0.01,...
                 'StateChangeConditions', {'Tup', 'exit'},...
@@ -421,6 +439,8 @@ for currentTrial = 1:MaxTrials
         UpdateOutcomePlot(TrialTypes, Outcomes);
         UpdatePerformancePlot(TrialTypes, Outcomes);
         UpdatePsychoPlot(TrialTypes, Outcomes);
+        
+        PokesPlot('update');
         
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
     end
