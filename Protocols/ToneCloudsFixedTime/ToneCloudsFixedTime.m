@@ -47,10 +47,17 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     % Stimulus section
     S.GUI.UseMiddleOctave.panel = 'Stimulus settings'; S.GUI.UseMiddleOctave.style = 'popupmenu'; S.GUI.UseMiddleOctave.string = {'no', 'yes'}; S.GUI.UseMiddleOctave.value = 1;% Training stage
             
-    S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0.66; % Overlap between tones (0 to 1) 0 meaning no overlap
+    
+    S.GUI.DifficultyLow.panel = 'Stimulus settings'; S.GUI.DifficultyLow.style = 'edit'; S.GUI.DifficultyLow.string = 1; % Lowest difficulty
+    S.GUI.DifficultyHigh.panel = 'Stimulus settings'; S.GUI.DifficultyHigh.style = 'edit'; S.GUI.DifficultyHigh.string = 1; % Highest difficulty
+    S.GUI.nDifficulties.panel = 'Stimulus settings'; S.GUI.nDifficulties.style = 'edit'; S.GUI.nDifficulties.string = 0; % Highest difficulty
+    %S.GUI.DifficultySet.panel = 'Stimulus settings'; S.GUI.DifficultySet.style = 'text'; S.GUI.DifficultySet.string = 1; % Highest difficulty
+    S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0; % Overlap between tones (0 to 1) 0 meaning no overlap
     S.GUI.ToneDuration.panel = 'Stimulus settings'; S.GUI.ToneDuration.style = 'edit'; S.GUI.ToneDuration.string = 0.03;
     S.GUI.NoEvidence.panel = 'Stimulus settings'; S.GUI.NoEvidence.style = 'edit'; S.GUI.NoEvidence.string = 0; % Number of tones with no evidence
     S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'AudibleHuman'; S.GUI.AudibleHuman.value = 1;
+    
+    
     
     % Reward 
     S.GUI.CenterRewardAmount.panel = 'Reward settings'; S.GUI.CenterRewardAmount.style = 'edit'; S.GUI.CenterRewardAmount.string = 0.5;
@@ -71,6 +78,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SoundDurationStart.panel = 'Stimulus Timing'; S.GUI.SoundDurationStart.style = 'edit'; S.GUI.SoundDurationStart.string = 0.050; % Sound duration start
     S.GUI.SoundDurationEnd.panel = 'Stimulus Timing'; S.GUI.SoundDurationEnd.style = 'edit'; S.GUI.SoundDurationEnd.string = 0.300; % Sound duration end
     S.GUI.SoundDurationStep.panel = 'Stimulus Timing'; S.GUI.SoundDurationStep.style = 'edit'; S.GUI.SoundDurationStep.string = 0.050; % Sound duration end
+    S.GUI.SoundDurationNtrials.panel = 'Stimulus Timing'; S.GUI.SoundDurationNtrials.style = 'edit'; S.GUI.SoundDurationNtrials.string = 20; % Required number of valid trials before each step
     S.GUI.SoundDurationCurrent.panel = 'Stimulus Timing'; S.GUI.SoundDurationCurrent.style = 'text'; S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationStart.string; % Sound duration end
 
     
@@ -130,20 +138,25 @@ BpodSystem.ProtocolFigures.PsychoPlotFig = figure('Position', [1450 100 400 300]
 BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.075 .3 .89 .6]);
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'init')  %set up axes nicely
 
+% Stimulus plot
+BpodSystem.ProtocolFigures.StimulusPlotFig = figure('Position', [457 803 600 375],'name','Stimulus plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+BpodSystem.GUIHandles.StimulusPlot = axes('Position', [.075 .3 .89 .6]);
+StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'init',StimulusSettings.nFreq);
+
 %%% pokes plot
 state_colors = struct( ...
         'WaitForCenterPoke', [0.5 0.5 1],...
-        'Delay',[1,0,0],...
+        'Delay',0.3*[1 1 1],...
         'DeliverStimulus', 0.75*[1 1 0],...
         'GoSignal',[0.5 1 1],...        
         'Reward',[0,1,0],...
-        'Drinking',[1,0,0],...
+        'Drinking',[0,0,1],...
         'Punish',[1,0,0],...
         'EarlyWithdrawal',[1,0.3,0],...
         'EarlyWithdrawalPunish',[1,0,0],...
-        'WaitForResponse',[1,0,0],...
+        'WaitForResponse',0.75*[0,1,1],...
         'CorrectWithdrawalEvent',[1,0,0],...
-        'exit',0.5*[1 1 1]);
+        'exit',0.2*[1 1 1]);
     
 poke_colors = struct( ...
       'L', 0.6*[1 0.66 0], ...
@@ -184,37 +197,47 @@ BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler_PlaySound';
 BpodSystem.ProtocolFigures.InitialMsg = msgbox({'', ' Edit your settings and click OK when you are ready to start!     ', ''},'ToneCloud Protocol...');
 uiwait(BpodSystem.ProtocolFigures.InitialMsg);
 
+% Disable changing task 
+BpodSystem.GUIHandles.ParameterGUI.ParamValues(strcmp(BpodSystem.GUIHandles.ParameterGUI.ParamNames,'Stage')==1).Enable = 'off';
+
+
 CenterValveCode = 2;
 
 % control the step up of prestimulus period and stimulus duration
 controlStep_Prestim = 0; % valid trial counter
 controlStep_nRequiredValid_Prestim = 10; % Number of required valid trials before next step
 controlStep_Sound = 0; % valid trial counter
-controlStep_nRequiredValid_Sound = 10; % Number of required valid trials before next step
 
 %% Main trial loop
 for currentTrial = 1:MaxTrials
     
     S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
     
+    
+    
     if S.GUI.AudibleHuman.value, minFreq = 200; maxFreq = 2000; else minFreq = 5000; maxFreq = 40000; end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Prestimulation Duration
-    if S.GUI.SoundDurationCurrent.string >= S.GUI.SoundDurationEnd.string % step up prestim only if stimulus is already at end duration
-        
-        if controlStep_Prestim > controlStep_nRequiredValid_Prestim
+    if S.GUI.PrestimDurationStart.string<S.GUI.PrestimDurationEnd.string %step up prestim duration only if start<end
+        if S.GUI.SoundDurationCurrent.string >= S.GUI.SoundDurationEnd.string % step up prestim only if stimulus is already at end duration
 
-            controlStep_Prestim = 0; %restart counter
+            if controlStep_Prestim > controlStep_nRequiredValid_Prestim
 
-            % step up, unless we are at the max
-            if S.GUI.PrestimDurationCurrent.string + S.GUI.PrestimDurationStep.string > S.GUI.PrestimDurationEnd.string
-                S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationEnd.string;
-            else
-                S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationCurrent.string + S.GUI.PrestimDurationStep.string;
+                controlStep_Prestim = 0; %restart counter
+
+                % step up, unless we are at the max
+                if S.GUI.PrestimDurationCurrent.string + S.GUI.PrestimDurationStep.string > S.GUI.PrestimDurationEnd.string
+                    S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationEnd.string;
+                else
+                    S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationCurrent.string + S.GUI.PrestimDurationStep.string;
+                end
             end
         end
-    end
+    else
+       S.GUI.PrestimDurationCurrent.string =  S.GUI.PrestimDurationStart.string;
+    end    
+    
     
     switch S.GUI.PrestimDistribution.value
         case 1
@@ -229,7 +252,9 @@ for currentTrial = 1:MaxTrials
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Sound Duration
     
-    if S.GUI.SoundDurationStart.string<S.GUI.SoundDurationEnd.string
+    controlStep_nRequiredValid_Sound = S.GUI.SoundDurationNtrials.string;
+    
+    if S.GUI.SoundDurationStart.string<S.GUI.SoundDurationEnd.string %step up sound duration only if start<end
         if controlStep_Sound > controlStep_nRequiredValid_Sound
 
             controlStep_Sound = 0; %restart counter
@@ -305,10 +330,18 @@ for currentTrial = 1:MaxTrials
         
         case 1 % Training stage 1: Direct sides - Poke and collect water
 
-            EvidenceStrength(currentTrial) = 1;
+            
+            S.GUI.DifficultyLow.enable = 'off';
+            S.GUI.DifficultyHigh.enable = 'off';
+            S.GUI.nDifficulties.enable = 'off';
+
+            S.GUI.TimeoutDuration.string = 0;
+            S.GUI.TimeoutDuration.enable = 'off';
+            
+            EvidenceStrength(currentTrial) = 1;            
             
             % This stage sound generation
-            [Sound, Cloud] = GenerateToneCloud(TargetOctave, EvidenceStrength(currentTrial), StimulusSettings);
+            [Sound, Cloud, Cloud_toplot] = GenerateToneCloud(TargetOctave, EvidenceStrength(currentTrial), StimulusSettings);
             PsychToolboxSoundServer('Load', 1, Sound);
             
             
@@ -351,11 +384,15 @@ for currentTrial = 1:MaxTrials
             RawEvents = RunStateMatrix;     
             
         case 2 %
-            
-            EvidenceStrength(currentTrial) = 1;
+                        
+            DifficultySet = [S.GUI.DifficultyLow.string S.GUI.DifficultyLow.string:(S.GUI.DifficultyHigh.string-S.GUI.DifficultyLow.string)/(S.GUI.nDifficulties.string-1):S.GUI.DifficultyHigh.string S.GUI.DifficultyHigh.string];
+            DifficultySet = unique(DifficultySet);
+%            S.GUI.DifficultySet.string = DifficultySet;
+
+            EvidenceStrength(currentTrial) = DifficultySet(randi(size(DifficultySet,2)));
             
             % This stage sound generation
-            [Sound, Cloud] = GenerateToneCloud(TargetOctave, EvidenceStrength(currentTrial), StimulusSettings);
+            [Sound, Cloud, Cloud_toplot] = GenerateToneCloud(TargetOctave, EvidenceStrength(currentTrial), StimulusSettings);
             PsychToolboxSoundServer('Load', 1, Sound);
             
             
@@ -439,6 +476,7 @@ for currentTrial = 1:MaxTrials
         UpdateOutcomePlot(TrialTypes, Outcomes);
         UpdatePerformancePlot(TrialTypes, Outcomes);
         UpdatePsychoPlot(TrialTypes, Outcomes);
+        UpdateStimulusPlot(Cloud_toplot);
         
         PokesPlot('update');
         
@@ -465,3 +503,8 @@ global BpodSystem
 EvidenceStrength = BpodSystem.Data.EvidenceStrength;
 nTrials = BpodSystem.Data.nTrials;
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'update',nTrials,2-TrialTypes,Outcomes,EvidenceStrength);
+
+function UpdateStimulusPlot(Cloud)
+global BpodSystem
+CloudDetails.EvidenceStrength = BpodSystem.Data.EvidenceStrength(end);
+StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'update',Cloud,CloudDetails);

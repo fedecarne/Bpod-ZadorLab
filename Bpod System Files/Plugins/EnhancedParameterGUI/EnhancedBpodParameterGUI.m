@@ -157,7 +157,9 @@ switch Op
                     Params.GUI.(BpodSystem.GUIHandles.ParameterGUI.ParamNames{x}).value = thisParamGUIValue;
             end
 
-
+            if isfield(Params.GUI.(ParamNames{x}),'enable')
+                BpodSystem.GUIHandles.ParameterGUI.ParamValues(x).Enable = Params.GUI.(ParamNames{x}).enable;
+            end
             
             BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x) = thisParamGUIValue;
         end

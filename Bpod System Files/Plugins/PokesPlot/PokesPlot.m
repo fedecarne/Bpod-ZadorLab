@@ -40,7 +40,7 @@ switch action
         fnames = fieldnames(state_colors);
         for j=1:str2double(BpodSystem.GUIHandles.PokesPlot.Lastn.String)
             for i=1:length(fnames)
-                BpodSystem.GUIHandles.PokesPlot.StateHandle(j).(fnames{i}) = fill([(i-1) (i-1)+2 (i-1)+2 (i-1)],[(j-1) (j-1) (j-1)+1 (j-1)+1],state_colors.(fnames{i}));
+                BpodSystem.GUIHandles.PokesPlot.StateHandle(j).(fnames{i}) = fill([(i-1) (i-1)+2 (i-1)+2 (i-1)],[(j-1) (j-1) (j-1)+1 (j-1)+1],state_colors.(fnames{i}),'EdgeColor','none');
                 BpodSystem.GUIHandles.PokesPlot.StateHandle(j).(fnames{i}).Visible = 'off';
                 hold on;
             end
@@ -72,11 +72,11 @@ switch action
     current_trial = BpodSystem.Data.nTrials;
     last_n = str2double(BpodSystem.GUIHandles.PokesPlot.Lastn.String);
     
-    fnames = fieldnames(BpodSystem.Data.RawEvents.Trial{1,BpodSystem.Data.nTrials}.States);
-    
-    %fnames = fieldnames(BpodSystem.GUIHandles.PokesPlot.StateHandle(current_trial));
-    
+%    fnames = fieldnames(BpodSystem.Data.RawEvents.Trial{1,BpodSystem.Data.nTrials}.States);
+        
     for j=1:last_n
+        
+        fnames = fieldnames(BpodSystem.Data.RawEvents.Trial{1,BpodSystem.Data.nTrials}.States);
         
         trial_toplot = current_trial-j+1;
         
@@ -90,13 +90,17 @@ switch action
                 x_vertices = [t(1) t(2) t(2) t(1)]';
                 y_vertices = [repmat(last_n-j,1,2) repmat(last_n-j+1,1,2)]';
                 
-                if ~isfield(BpodSystem.GUIHandles.PokesPlot.StateHandle(current_trial),fnames{i}) %if the field was not initialized, paint it white
-                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}) = fill([0 0 0 0],[0 0 0 0],[1 1 1]);
+                if size(BpodSystem.GUIHandles.PokesPlot.StateHandle,2)<last_n % if the number of trial to plot (last_n) is changed from the gui.
+                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n).(fnames{i}) = fill([0 0 0 0],[0 0 0 0],BpodSystem.GUIHandles.PokesPlot.StateColors.(fnames{i}),'EdgeColor','none');
+                end        
+                
+                if ~isfield(BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1),fnames{i}) %if the field was not initialized, paint it white
+                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}) = fill([0 0 0 0],[0 0 0 0],[1 1 1],'EdgeColor','none');
                     BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}).Vertices = [x_vertices y_vertices];
                 end
                 
-                if isempty(BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1)) % if the number of trial to plot (last_n) is changed from the gui.
-                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}) = fill([0 0 0 0],[0 0 0 0],BpodSystem.GUIHandles.PokesPlot.StateColors.(fnames{i}));
+                if isempty(BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i})) % if the number of trial to plot (last_n) is changed from the gui.
+                    BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}) = fill([0 0 0 0],[0 0 0 0],BpodSystem.GUIHandles.PokesPlot.StateColors.(fnames{i}),'EdgeColor','none');
                 end                
                 BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}).Vertices = [x_vertices y_vertices];
                 BpodSystem.GUIHandles.PokesPlot.StateHandle(last_n-j+1).(fnames{i}).Visible = 'on';
