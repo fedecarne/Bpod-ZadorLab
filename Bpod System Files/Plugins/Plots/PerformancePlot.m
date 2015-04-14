@@ -76,32 +76,32 @@ switch Action
          TrialType1Perf = nan(NtrialsToPlot,1);
          TrialType2Perf = nan(NtrialsToPlot,1);
          ValidTrialsFractionVec = nan(NtrialsToPlot,1);
+
+         BpodSystem.GUIHandles.SessionTime = uicontrol('Style','text',...
+        'Position',[0 20 200 20], 'String',['Time: 0 min'],'Fontsize',13);
          
          BpodSystem.GUIHandles.DeliveredWater = uicontrol('Style','text',...
-        'Position',[100 20 200 20], 'String',['Delivered Water: 0 ul'],'Fontsize',13);
+        'Position',[200 20 200 20], 'String',['Delivered Water: 0 ul'],'Fontsize',13);
 
          BpodSystem.GUIHandles.ValidTrials = uicontrol('Style','text',...
-        'Position',[300 20 200 20], 'String',['Valid trials: 0'],'Fontsize',13);
+        'Position',[400 20 200 20], 'String',['Valid trials: 0'],'Fontsize',13);
     
          BpodSystem.GUIHandles.CorrectTrials = uicontrol('Style','text',...
-        'Position',[500 20 200 20], 'String',['Correct trials: 0'],'Fontsize',13);
+        'Position',[600 20 200 20], 'String',['Correct trials: 0'],'Fontsize',13);
     
          BpodSystem.GUIHandles.TotalTrials = uicontrol('Style','text',...
-        'Position',[700 20 200 20], 'String',['Total trials: 0 '],'Fontsize',13);
+        'Position',[800 20 200 20], 'String',['Total trials: 0 '],'Fontsize',13);
          
     case 'update'
         lastTrial = varargin{1};
         SideList = varargin{2};
         OutcomeRecord = varargin{3};
+        SessionBirthdate = varargin{4};
         
-        if numel(varargin) > 3
-            colors = varargin{5};
-        else
-            colors = [0.5 0.5 0.5;...%fraction of valid trials
-                        0 1 0; ...   %fraction of correct trials
-                        1 0.5 0; ... %fraction correct LEFT trials
-                        0.5 0 1];    %fraction correct RIGHT trials
-        end
+        colors = [0.5 0.5 0.5;...%fraction of valid trials
+                    0 1 0; ...   %fraction of correct trials
+                    1 0.5 0; ... %fraction correct LEFT trials
+                    0.5 0 1];    %fraction correct RIGHT trials
         
         PrevValidTrialsCount = sum(OutcomeRecord(1:lastTrial)>=0); %count number of valid (complete) trials
         SideList = SideList(OutcomeRecord >= 0);
@@ -134,7 +134,9 @@ switch Action
                 h4 = plot(AxesHandle,indxToPlot,TrialType2Perf(indxToPlot),'s','MarkerFaceColor',colors(4,:),'MarkerEdgeColor', colors(4,:),'MarkerSize',markersize); %plot
                 
             end
-            
+
+            BpodSystem.GUIHandles.SessionTime.String = ['Time: ' num2str(toc(SessionBirthdate)/60,'%3.0f') ' min'];
+                        
             BpodSystem.GUIHandles.DeliveredWater.String = ['Delivered Water: ' num2str(BpodSystem.Data.AccumulatedReward) ' ul'];
             
             BpodSystem.GUIHandles.ValidTrials.String = ['Valid trials: ' num2str(nansum(OutcomeRecord >= 0))];

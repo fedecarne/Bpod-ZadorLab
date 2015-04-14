@@ -200,10 +200,12 @@ uiwait(BpodSystem.ProtocolFigures.InitialMsg);
 % Disable changing task 
 BpodSystem.GUIHandles.ParameterGUI.ParamValues(strcmp(BpodSystem.GUIHandles.ParameterGUI.ParamNames,'Stage')==1).Enable = 'off';
 
+% Set timer for this session
+SessionBirthdate = tic;
 
 CenterValveCode = 2;
 
-% control the step up of prestimulus period and stimulus duration
+% Control the step up of prestimulus period and stimulus duration
 controlStep_Prestim = 0; % valid trial counter
 controlStep_nRequiredValid_Prestim = 10; % Number of required valid trials before next step
 controlStep_Sound = 0; % valid trial counter
@@ -474,7 +476,7 @@ for currentTrial = 1:MaxTrials
         
         
         UpdateOutcomePlot(TrialTypes, Outcomes);
-        UpdatePerformancePlot(TrialTypes, Outcomes);
+        UpdatePerformancePlot(TrialTypes, Outcomes,SessionBirthdate);
         UpdatePsychoPlot(TrialTypes, Outcomes);
         UpdateStimulusPlot(Cloud_toplot);
         
@@ -493,10 +495,10 @@ EvidenceStrength = BpodSystem.Data.EvidenceStrength;
 nTrials = BpodSystem.Data.nTrials;
 OutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',nTrials+1,2-TrialTypes,Outcomes,EvidenceStrength);
 
-function UpdatePerformancePlot(TrialTypes, Outcomes)
+function UpdatePerformancePlot(TrialTypes, Outcomes,SessionBirthdate)
 global BpodSystem
 nTrials = BpodSystem.Data.nTrials;
-PerformancePlot(BpodSystem.GUIHandles.PerformancePlot,'update',nTrials,2-TrialTypes,Outcomes);
+PerformancePlot(BpodSystem.GUIHandles.PerformancePlot,'update',nTrials,2-TrialTypes,Outcomes,SessionBirthdate);
 
 function UpdatePsychoPlot(TrialTypes, Outcomes)
 global BpodSystem
