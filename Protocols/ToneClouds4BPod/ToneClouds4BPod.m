@@ -59,7 +59,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     % Trial structure section     
     S.GUI.TimeForResponse.panel = 'Trial Structure'; S.GUI.TimeForResponse.style = 'edit'; S.GUI.TimeForResponse.string = 10;
     S.GUI.TimeoutDuration.panel = 'Trial Structure'; S.GUI.TimeoutDuration.style = 'edit'; S.GUI.TimeoutDuration.string = 4;    
-    S.GUI.PrestimDuration.panel = 'Trial Structure'; S.GUI.PrestimDuration.style = 'edit'; S.GUI.PrestimDuration.string = 0.3;
+    S.GUI.PrestimDuration.panel = 'Trial Structure'; S.GUI.PrestimDuration.style = 'edit'; S.GUI.PrestimDuration.string = 0.05;
     S.GUI.PrestimDistribution.panel = 'Trial Structure'; S.GUI.PrestimDistribution.style = 'popupmenu'; S.GUI.PrestimDistribution.string = {'Delta', 'Uniform', 'Exponential'}; S.GUI.PrestimDistribution.value = 1;% Training stage
     
     % Antibias

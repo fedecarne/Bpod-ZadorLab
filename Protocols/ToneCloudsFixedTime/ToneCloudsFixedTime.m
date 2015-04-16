@@ -456,7 +456,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.SoundDuration(currentTrial) = SoundDuration(currentTrial); % Adds the evidence strength of the current trial to data
         BpodSystem.Data.StimulusSettings = StimulusSettings; % Save Stimulus settings
         BpodSystem.Data.Cloud{currentTrial} = Cloud; % Saves Stimulus 
-        BpodSystem.Data.Outcomes(currentTrial) = Outcomes(currentTrial);
+
         
         %Outcome
         if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Reward(1))
@@ -472,6 +472,7 @@ for currentTrial = 1:MaxTrials
             Outcomes(currentTrial) = -1;
         end
         
+        BpodSystem.Data.Outcomes(currentTrial) = Outcomes(currentTrial);
         BpodSystem.Data.AccumulatedReward = AccumulatedReward;
         
         

@@ -62,7 +62,9 @@ switch Op
         uniqueParamPanel = unique(ParamPanel);
         nPanels = length(unique(ParamPanel));
         
-        Vsize = 20+(30*nValues)+70*(nPanels+1)+20;
+        %Vsize = 20+(30*nValues)+70*(nPanels+1)+20;
+        Vsize = 20+(30*nValues)+70*(nPanels+1)+20+160;
+        
         Width = 300;
         
         screensize = get( groot, 'Screensize');
@@ -120,13 +122,10 @@ switch Op
         for x = 1:nValues            
             switch Params.GUI.(ParamNames{x}).style
                 case 'text'
-                    thisParamGUIValue = str2double(get(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String'));
-                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x);
+                    % text can only be changed from code
                     thisParamInputValue = Params.GUI.(ParamNames{x}).string;
-                    if thisParamGUIValue == thisParamLastValue % If the user didn't change the GUI, the GUI can be changed from the input.
-                        set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String', sprintf('%g',thisParamInputValue));
-                        thisParamGUIValue = thisParamInputValue;
-                    end
+                    set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String', sprintf('%g',thisParamInputValue));
+                    thisParamGUIValue = thisParamInputValue;
                     Params.GUI.(BpodSystem.GUIHandles.ParameterGUI.ParamNames{x}).string = thisParamGUIValue;
                 case 'edit'
                     thisParamGUIValue = str2double(get(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String'));
