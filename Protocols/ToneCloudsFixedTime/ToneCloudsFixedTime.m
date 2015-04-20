@@ -1,40 +1,10 @@
-%{
-----------------------------------------------------------------------------
-
-This file is part of the Bpod Project
-Copyright (C) 2014 Joshua I. Sanders, Cold Spring Harbor Laboratory, NY, USA
-
-----------------------------------------------------------------------------
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3.
-
-This program is distributed  WITHOUT ANY WARRANTY and without even the 
-implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-%}
-
 
 function ToneCloudsFixedTime
+
 % This protocol implements the fixed time version of ToneClouds (developed by P. Znamenskiy) on Bpod
 % Based on PsychoToolboxSound (written by J.Sanders)
 
-% Training stages based on Jaramillo and Zador (2014)
-
 % Written by F.Carnevale, 2/2015.
-%
-% SETUP
-% You will need:
-% - Ubuntu 14.XX with the -lowlatency package installed
-% - ASUS Xonar DX 7-channel sound card installed
-% - PsychToolbox installed
-% - The Xonar DX comes with an RCA cable. Use an RCA to BNC adapter to
-%    connect channel 3 to one of Bpod's BNC input channels for a record of the
-%    exact time each sound played.
 
 global BpodSystem
 
@@ -46,18 +16,13 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     
     % Stimulus section
     S.GUI.UseMiddleOctave.panel = 'Stimulus settings'; S.GUI.UseMiddleOctave.style = 'popupmenu'; S.GUI.UseMiddleOctave.string = {'no', 'yes'}; S.GUI.UseMiddleOctave.value = 1;% Training stage
-            
-    
     S.GUI.DifficultyLow.panel = 'Stimulus settings'; S.GUI.DifficultyLow.style = 'edit'; S.GUI.DifficultyLow.string = 1; % Lowest difficulty
     S.GUI.DifficultyHigh.panel = 'Stimulus settings'; S.GUI.DifficultyHigh.style = 'edit'; S.GUI.DifficultyHigh.string = 1; % Highest difficulty
     S.GUI.nDifficulties.panel = 'Stimulus settings'; S.GUI.nDifficulties.style = 'edit'; S.GUI.nDifficulties.string = 0; % Highest difficulty
-    %S.GUI.DifficultySet.panel = 'Stimulus settings'; S.GUI.DifficultySet.style = 'text'; S.GUI.DifficultySet.string = 1; % Highest difficulty
     S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0; % Overlap between tones (0 to 1) 0 meaning no overlap
     S.GUI.ToneDuration.panel = 'Stimulus settings'; S.GUI.ToneDuration.style = 'edit'; S.GUI.ToneDuration.string = 0.03;
     S.GUI.NoEvidence.panel = 'Stimulus settings'; S.GUI.NoEvidence.style = 'edit'; S.GUI.NoEvidence.string = 0; % Number of tones with no evidence
-    S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'AudibleHuman'; S.GUI.AudibleHuman.value = 1;
-    
-    
+    S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'AudibleHuman'; S.GUI.AudibleHuman.value = 1;    
     
     % Reward 
     S.GUI.CenterRewardAmount.panel = 'Reward settings'; S.GUI.CenterRewardAmount.style = 'edit'; S.GUI.CenterRewardAmount.string = 0.5;
@@ -73,6 +38,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.PrestimDurationStart.panel = 'Prestim Timing'; S.GUI.PrestimDurationStart.style = 'edit'; S.GUI.PrestimDurationStart.string = 0.050; % Prestim duration start
     S.GUI.PrestimDurationEnd.panel = 'Prestim Timing'; S.GUI.PrestimDurationEnd.style = 'edit'; S.GUI.PrestimDurationEnd.string = 0.300; % Prestim duration end
     S.GUI.PrestimDurationStep.panel = 'Prestim Timing'; S.GUI.PrestimDurationStep.style = 'edit'; S.GUI.PrestimDurationStep.string = 0.050; % Prestim duration end
+    S.GUI.PrestimDurationNtrials.panel = 'Prestim Timing'; S.GUI.PrestimDurationNtrials.style = 'edit'; S.GUI.PrestimDurationNtrials.string = 20; % Required number of valid trials before each step    
     S.GUI.PrestimDurationCurrent.panel = 'Prestim Timing'; S.GUI.PrestimDurationCurrent.style = 'text'; S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationStart.string; % Prestim duration end    
     
     S.GUI.SoundDurationStart.panel = 'Stimulus Timing'; S.GUI.SoundDurationStart.style = 'edit'; S.GUI.SoundDurationStart.string = 0.050; % Sound duration start
@@ -80,11 +46,9 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SoundDurationStep.panel = 'Stimulus Timing'; S.GUI.SoundDurationStep.style = 'edit'; S.GUI.SoundDurationStep.string = 0.050; % Sound duration end
     S.GUI.SoundDurationNtrials.panel = 'Stimulus Timing'; S.GUI.SoundDurationNtrials.style = 'edit'; S.GUI.SoundDurationNtrials.string = 20; % Required number of valid trials before each step
     S.GUI.SoundDurationCurrent.panel = 'Stimulus Timing'; S.GUI.SoundDurationCurrent.style = 'text'; S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationStart.string; % Sound duration end
-
     
     % Antibias
     S.GUI.Antibias.panel = 'Antibias'; S.GUI.Antibias.style = 'popupmenu'; S.GUI.Antibias.string = {'no', 'yes'}; S.GUI.Antibias.value = 1;% Training stage
-
     
     if S.GUI.AudibleHuman.value, minFreq = 200; maxFreq = 2000; else minFreq = 5000; maxFreq = 40000; end
 
@@ -128,7 +92,6 @@ OutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',2-TrialTypes);
 BpodNotebook('init');
 
 % Performance
-%BpodSystem.ProtocolFigures.PerformancePlotFig = figure('Position', [455 595 1000 163],'name','Performance plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
 BpodSystem.ProtocolFigures.PerformancePlotFig = figure('Position', [455 595 1000 250],'name','Performance plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
 BpodSystem.GUIHandles.PerformancePlot = axes('Position', [.075 .3 .89 .6]);
 PerformancePlot(BpodSystem.GUIHandles.PerformancePlot,'init')  %set up axes nicely
@@ -143,7 +106,7 @@ BpodSystem.ProtocolFigures.StimulusPlotFig = figure('Position', [457 803 600 375
 BpodSystem.GUIHandles.StimulusPlot = axes('Position', [.075 .3 .89 .6]);
 StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'init',StimulusSettings.nFreq);
 
-%%% pokes plot
+%%% Pokes plot
 state_colors = struct( ...
         'WaitForCenterPoke', [0.5 0.5 1],...
         'Delay',0.3*[1 1 1],...
@@ -207,20 +170,20 @@ CenterValveCode = 2;
 
 % Control the step up of prestimulus period and stimulus duration
 controlStep_Prestim = 0; % valid trial counter
-controlStep_nRequiredValid_Prestim = 10; % Number of required valid trials before next step
 controlStep_Sound = 0; % valid trial counter
 
 %% Main trial loop
 for currentTrial = 1:MaxTrials
     
     S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
-    
-    
-    
+        
     if S.GUI.AudibleHuman.value, minFreq = 200; maxFreq = 2000; else minFreq = 5000; maxFreq = 40000; end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Prestimulation Duration
+
+    controlStep_nRequiredValid_Prestim = S.GUI.PrestimDurationNtrials.string;
+    
     if S.GUI.PrestimDurationStart.string<S.GUI.PrestimDurationEnd.string %step up prestim duration only if start<end
         if S.GUI.SoundDurationCurrent.string >= S.GUI.SoundDurationEnd.string % step up prestim only if stimulus is already at end duration
 
@@ -293,7 +256,7 @@ for currentTrial = 1:MaxTrials
             TrialTypes(currentTrial)=TrialTypes(currentTrial-1);
         end
     end
-    
+
     switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         
         case 1 % Left is rewarded
@@ -321,17 +284,18 @@ for currentTrial = 1:MaxTrials
             RewardedPort = {'Port3In'}; PunishedPort = {'Port1In'};
     end
     
-    
     if S.GUI.PunishSound.value
+        PsychToolboxSoundServer('Load', 3, PunishSound);
         PsychToolboxSoundServer('Load', 4, EarlyWithdrawalSound);
     else
+        PsychToolboxSoundServer('Load', 3, 0);
         PsychToolboxSoundServer('Load', 4, 0);
     end
+    
     
     switch S.GUI.Stage.value
         
         case 1 % Training stage 1: Direct sides - Poke and collect water
-
             
             S.GUI.DifficultyLow.enable = 'off';
             S.GUI.DifficultyHigh.enable = 'off';
@@ -385,11 +349,10 @@ for currentTrial = 1:MaxTrials
             SendStateMatrix(sma);
             RawEvents = RunStateMatrix;     
             
-        case 2 %
+        case 2 % Full task
                         
             DifficultySet = [S.GUI.DifficultyLow.string S.GUI.DifficultyLow.string:(S.GUI.DifficultyHigh.string-S.GUI.DifficultyLow.string)/(S.GUI.nDifficulties.string-1):S.GUI.DifficultyHigh.string S.GUI.DifficultyHigh.string];
             DifficultySet = unique(DifficultySet);
-%            S.GUI.DifficultySet.string = DifficultySet;
 
             EvidenceStrength(currentTrial) = DifficultySet(randi(size(DifficultySet,2)));
             
@@ -456,7 +419,6 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.SoundDuration(currentTrial) = SoundDuration(currentTrial); % Adds the evidence strength of the current trial to data
         BpodSystem.Data.StimulusSettings = StimulusSettings; % Save Stimulus settings
         BpodSystem.Data.Cloud{currentTrial} = Cloud; % Saves Stimulus 
-
         
         %Outcome
         if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Reward(1))

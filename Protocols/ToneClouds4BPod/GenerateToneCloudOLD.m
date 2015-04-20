@@ -1,4 +1,4 @@
-function [out, cloud, cloud_toplot] = GenerateToneCloud(rewarded, r, StimSettings)
+function [out, cloud] = GenerateToneCloudOLD(rewarded, r, StimSettings)
 %{ 
 GENERATETONECLOUD: Generates Cloud of tones
 
@@ -104,7 +104,7 @@ tones = (sin(toneVec'*freqs*2*pi)).*Envelope; % Here are the enveloped tones as 
 
 out = zeros(1,round(length(freqs)*length(toneVec)-(length(freqs)-1)*ToneOverlap*length(toneVec)));
 
-cloud_toplot = nan(nFreq,round(length(freqs)*length(toneVec)-(length(freqs)-1)*ToneOverlap*length(toneVec)));
+cloud_toplot = nan(length(cloud),round(length(freqs)*length(toneVec)-(length(freqs)-1)*ToneOverlap*length(toneVec)));
 for ind = 1:length(cloud)
     tonePos = round((ind-1)*length(toneVec)*(1-ToneOverlap))+1:round((ind-1)*(1-ToneOverlap)*length(toneVec))+length(toneVec);
 
