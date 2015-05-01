@@ -4,7 +4,7 @@ function SyncWithServer(source,callbackdata)
 
 global BpodSystem
 
-serverfolder = '/media/windowsshare/fede/Data/';
+serverfolder = '/media/windowsshare/Data/';
 datapath = BpodSystem.DataPath;
 localdatapath = datapath(strfind(datapath,'Data')+5:end);
 serverpath = [serverfolder localdatapath];
