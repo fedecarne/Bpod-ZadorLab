@@ -11,8 +11,9 @@ global BpodSystem
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-        
-    S.GUI.Stage.panel = 'Training Stage'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 1;% Training stage
+
+    S.GUI.Subject.panel = 'Protocol'; S.GUI.Subject.style = 'text'; S.GUI.Subject.string = BpodSystem.GUIData.SubjectName;    
+    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 1;% Training stage
     
     % Stimulus section
     S.GUI.UseMiddleOctave.panel = 'Stimulus settings'; S.GUI.UseMiddleOctave.style = 'popupmenu'; S.GUI.UseMiddleOctave.string = {'no', 'yes'}; S.GUI.UseMiddleOctave.value = 1;% Training stage
@@ -27,7 +28,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     % Reward 
     S.GUI.RewardAmount.panel = 'Reward settings'; S.GUI.RewardAmount.style = 'edit'; S.GUI.RewardAmount.string = 2.5;
     S.GUI.FreqSide.panel = 'Reward settings'; S.GUI.FreqSide.style = 'popupmenu'; S.GUI.FreqSide.string = {'LowLeft', 'LowRight'}; S.GUI.FreqSide.value = 1;% Training stage
-    S.GUI.PunishSound.panel = 'Reward settings'; S.GUI.PunishSound.style = 'checkbox'; S.GUI.PunishSound.string = 'Active';  S.GUI.PunishSound.value = 1;
+    S.GUI.PunishSound.panel = 'Reward settings'; S.GUI.PunishSound.style = 'checkbox'; S.GUI.PunishSound.string = 'Active';  S.GUI.PunishSound.value = 2;
         
     % Trial structure section     
     S.GUI.TimeForResponse.panel = 'Trial Structure'; S.GUI.TimeForResponse.style = 'edit'; S.GUI.TimeForResponse.string = 10;
@@ -35,7 +36,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     
     S.GUI.PrestimDistribution.panel = 'Prestim Timing'; S.GUI.PrestimDistribution.style = 'popupmenu'; S.GUI.PrestimDistribution.string = {'Delta', 'Uniform', 'Exponential'}; S.GUI.PrestimDistribution.value = 1;% Training stage
     S.GUI.PrestimDurationStart.panel = 'Prestim Timing'; S.GUI.PrestimDurationStart.style = 'edit'; S.GUI.PrestimDurationStart.string = 0.050; % Prestim duration start
-    S.GUI.PrestimDurationEnd.panel = 'Prestim Timing'; S.GUI.PrestimDurationEnd.style = 'edit'; S.GUI.PrestimDurationEnd.string = 0.300; % Prestim duration end
+    S.GUI.PrestimDurationEnd.panel = 'Prestim Timing'; S.GUI.PrestimDurationEnd.style = 'edit'; S.GUI.PrestimDurationEnd.string = 0.050; % Prestim duration end
     S.GUI.PrestimDurationStep.panel = 'Prestim Timing'; S.GUI.PrestimDurationStep.style = 'edit'; S.GUI.PrestimDurationStep.string = 0.050; % Prestim duration end
     S.GUI.PrestimDurationNtrials.panel = 'Prestim Timing'; S.GUI.PrestimDurationNtrials.style = 'edit'; S.GUI.PrestimDurationNtrials.string = 50; %
     S.GUI.PrestimDurationCurrent.panel = 'Prestim Timing'; S.GUI.PrestimDurationCurrent.style = 'text'; S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationStart.string; % Prestim duration end    
@@ -60,15 +61,11 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     
 end
 
-% Initialize parameter GUI plugin
-EnhancedBpodParameterGUI('init', S);
-
 %% Define trials
 MaxTrials = 5000;
 TrialTypes = ceil(rand(1,MaxTrials)*2); % correct side for each trial
 EvidenceStrength = nan(1,MaxTrials); % evidence strength for each trial
 PrestimDuration = nan(1,MaxTrials); % prestimulation delay period for each trial
-SoundDuration = nan(1,MaxTrials); % sound duration period for each trial
 Outcomes = nan(1,MaxTrials);
 AccumulatedReward=0;
 
@@ -77,6 +74,10 @@ BpodSystem.Data.EvidenceStrength = []; % The evidence strength of each trial com
 BpodSystem.Data.PrestimDuration = []; % The evidence strength of each trial completed will be added here.
 
 %% Initialize plots
+
+% Initialize parameter GUI plugin
+EnhancedBpodParameterGUI('init', S);
+
 
 % Outcome plot
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [457 803 1000 163],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
@@ -88,17 +89,17 @@ BpodNotebook('init');
 
 % Performance
 BpodSystem.ProtocolFigures.PerformancePlotFig = figure('Position', [455 595 1000 250],'name','Performance plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-BpodSystem.GUIHandles.PerformancePlot = axes('Position', [.075 .3 .89 .6]);
+BpodSystem.GUIHandles.PerformancePlot = axes('Position', [.075 .3 .79 .6]);
 PerformancePlot(BpodSystem.GUIHandles.PerformancePlot,'init')  %set up axes nicely
 
 % Psychometric
 BpodSystem.ProtocolFigures.PsychoPlotFig = figure('Position', [1450 100 400 300],'name','Pshycometric plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.075 .3 .89 .6]);
+BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.2 .25 .75 .65]);
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'init')  %set up axes nicely
 
 % Stimulus plot
-BpodSystem.ProtocolFigures.StimulusPlotFig = figure('Position', [457 803 600 375],'name','Stimulus plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-BpodSystem.GUIHandles.StimulusPlot = axes('Position', [.075 .3 .89 .6]);
+BpodSystem.ProtocolFigures.StimulusPlotFig = figure('Position', [457 803 500 300],'name','Stimulus plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+BpodSystem.GUIHandles.StimulusPlot = axes('Position', [.15 .2 .75 .65]);
 StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'init',StimulusSettings.nFreq);
 
 %%% Pokes plot
@@ -174,7 +175,11 @@ for currentTrial = 1:MaxTrials
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Prestimulation Duration
-
+    
+    if currentTrial==1 %start from the start
+        S.GUI.PrestimDurationCurrent.string =  S.GUI.PrestimDurationStart.string;
+    end
+    
     controlStep_nRequiredValid_Prestim = S.GUI.PrestimDurationNtrials.string;
     
     if S.GUI.PrestimDurationStart.string<S.GUI.PrestimDurationEnd.string %step up prestim duration only if start<end
@@ -208,7 +213,6 @@ for currentTrial = 1:MaxTrials
     R = GetValveTimes(S.GUI.RewardAmount.string, [1 3]); LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
     
     % Update stimulus settings
-    %StimulusSettings.nTones = floor((S.GUI.SoundDurationCurrent.string-S.GUI.ToneDuration.string*S.GUI.ToneOverlap.string)/(S.GUI.ToneDuration.string*(1-S.GUI.ToneOverlap.string)));
     StimulusSettings.nTones = floor((S.GUI.SoundMaxDuration.string-S.GUI.ToneDuration.string*S.GUI.ToneOverlap.string)/(S.GUI.ToneDuration.string*(1-S.GUI.ToneOverlap.string)));
     StimulusSettings.ToneOverlap = S.GUI.ToneOverlap.string;
     StimulusSettings.ToneDuration = S.GUI.ToneDuration.string;
@@ -363,57 +367,6 @@ for currentTrial = 1:MaxTrials
             
             SendStateMatrix(sma);
             RawEvents = RunStateMatrix;
-    
-%     case 7 % Training stage 7: Full cloud of tones task - Free Settings
-%                    
-%             EvidenceStrength(currentTrial) = rand;
-%                 
-%             % This stage sound generation
-%             [Sound, Cloud] = GenerateToneCloud(TargetOctave, EvidenceStrength(currentTrial), StimulusSettings);
-%             PsychToolboxSoundServer('Load', 1, Sound);
-%             
-%             
-%             sma = NewStateMatrix(); % Assemble state matrix
-%             
-%             sma = AddState(sma, 'Name', 'WaitForCenterPoke', ...
-%                 'Timer', 0,...
-%                 'StateChangeConditions', {'Port2In', 'Delay'},...
-%                 'OutputActions', {});
-%             sma = AddState(sma, 'Name', 'Delay', ...
-%                 'Timer', PrestimDuration(currentTrial),...
-%                 'StateChangeConditions', {'Tup', 'DeliverStimulus', 'Port2Out', 'EarlyWithdrawal'},...
-%                 'OutputActions', {});
-%             sma = AddState(sma, 'Name', 'DeliverStimulus', ...
-%                 'Timer', SoundDuration,...
-%                 'StateChangeConditions', {'Tup', 'WaitForResponse'},...
-%                 'OutputActions', {'SoftCode', 1, 'BNCState', 1});
-%             sma = AddState(sma, 'Name', 'EarlyWithdrawal', ...
-%                 'Timer', 0,...
-%                 'StateChangeConditions', {'Tup', 'EarlyWithdrawalPunish'},...
-%                 'OutputActions', {'SoftCode', 255});
-%             sma = AddState(sma, 'Name', 'WaitForResponse', ...
-%                 'Timer', S.GUI.TimeForResponse.string,...
-%                 'StateChangeConditions', {'Tup', 'exit', 'Port1In', LeftActionState, 'Port3In', RightActionState},...
-%                 'OutputActions', {});
-%             sma = AddState(sma, 'Name', 'Reward', ...
-%                 'Timer', ValveTime,...
-%                 'StateChangeConditions', {'Tup', 'Drinking'},...
-%                 'OutputActions', {'ValveState', ValveCode});
-%             sma = AddState(sma, 'Name', 'Drinking', ...
-%                 'Timer', 10,...
-%                 'StateChangeConditions', {'Tup', 'exit', CorrectWithdrawalEvent, 'exit'},...
-%                 'OutputActions', {});
-%             sma = AddState(sma, 'Name', 'Punish', ...
-%                 'Timer', S.GUI.TimeoutDuration.string,...
-%                 'StateChangeConditions', {'Tup', 'exit'},...
-%                 'OutputActions', {'SoftCode', 3});
-%             sma = AddState(sma, 'Name', 'EarlyWithdrawalPunish', ...
-%                 'Timer', S.GUI.TimeoutDuration.string,...
-%                 'StateChangeConditions', {'Tup', 'exit'},...
-%                 'OutputActions', {'SoftCode', 4});
-%             
-%             SendStateMatrix(sma);
-%             RawEvents = RunStateMatrix;
     end
     
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned
@@ -452,7 +405,9 @@ for currentTrial = 1:MaxTrials
         UpdateOutcomePlot(TrialTypes, Outcomes);
         UpdatePerformancePlot(TrialTypes, Outcomes,SessionBirthdate);
         UpdatePsychoPlot(TrialTypes, Outcomes);
-        UpdateStimulusPlot(Cloud_toplot);
+        
+        tDeliverStimulus = diff(BpodSystem.Data.RawEvents.Trial{1, 1}.States.DeliverStimulus);
+        UpdateStimulusPlot(Cloud_toplot,tDeliverStimulus);
         
         PokesPlot('update');
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
@@ -479,7 +434,7 @@ EvidenceStrength = BpodSystem.Data.EvidenceStrength;
 nTrials = BpodSystem.Data.nTrials;
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'update',nTrials,2-TrialTypes,Outcomes,EvidenceStrength);
 
-function UpdateStimulusPlot(Cloud)
+function UpdateStimulusPlot(Cloud,tDeliverStimulus)
 global BpodSystem
 CloudDetails.EvidenceStrength = BpodSystem.Data.EvidenceStrength(end);
-StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'update',Cloud,CloudDetails);
+StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'update',Cloud,CloudDetails,tDeliverStimulus);

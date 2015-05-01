@@ -58,39 +58,57 @@ function PerformancePlot(AxesHandle, Action, varargin)
 % Kachi O. 2014.Mar.17
 
 global BpodSystem
-global markersize NtrialsToPlot windowSizeToAverage ValidTrialsFractionVec PerformanceVec TrialType1Perf TrialType2Perf % makes these variable available to all cases 
+global markersize ValidTrialsFractionVec PerformanceVec TrialType1Perf TrialType2Perf % makes these variable available to all cases 
 
-NtrialsToPlot = 100; %default number of trials to display
-windowSizeToAverage = 20;
 markersize = 4;
 switch Action
         
     case 'init'
-         set(AxesHandle,'TickDir', 'out','XLim',[1 NtrialsToPlot],'YLim', [-0.1, 1.1], 'YTick', [0:0.25:1]);
-         ylabel(AxesHandle,'Performance');
-         hold (AxesHandle,'on');
-         indxToPlot = [1:NtrialsToPlot];
-         plot(AxesHandle,indxToPlot,0.5*ones(size(indxToPlot)),'k--')
-         
-         PerformanceVec = nan(NtrialsToPlot,1);
-         TrialType1Perf = nan(NtrialsToPlot,1);
-         TrialType2Perf = nan(NtrialsToPlot,1);
-         ValidTrialsFractionVec = nan(NtrialsToPlot,1);
+
 
          BpodSystem.GUIHandles.SessionTime = uicontrol('Style','text',...
-        'Position',[0 20 200 20], 'String',['Time: 0 min'],'Fontsize',13);
+        'Position',[0 20 200 20], 'String','Time: 0 min','Fontsize',13);
          
          BpodSystem.GUIHandles.DeliveredWater = uicontrol('Style','text',...
-        'Position',[200 20 200 20], 'String',['Delivered Water: 0 ul'],'Fontsize',13);
-
-         BpodSystem.GUIHandles.ValidTrials = uicontrol('Style','text',...
-        'Position',[400 20 200 20], 'String',['Valid trials: 0'],'Fontsize',13);
+        'Position',[200 20 200 20], 'String','Water: 0 ul','Fontsize',13);
     
          BpodSystem.GUIHandles.CorrectTrials = uicontrol('Style','text',...
-        'Position',[600 20 200 20], 'String',['Correct trials: 0'],'Fontsize',13);
+        'Position',[400 20 200 20], 'String','Correct trials: 0','Fontsize',13);
+
+         BpodSystem.GUIHandles.ValidTrials = uicontrol('Style','text',...
+        'Position',[600 20 200 20], 'String','Valid trials: 0','Fontsize',13);    
+         
+        BpodSystem.GUIHandles.TotalTrials = uicontrol('Style','text',...
+        'Position',[800 20 200 20], 'String','Total trials: 0 ','Fontsize',13);
     
-         BpodSystem.GUIHandles.TotalTrials = uicontrol('Style','text',...
-        'Position',[800 20 200 20], 'String',['Total trials: 0 '],'Fontsize',13);
+        BpodSystem.GUIHandles.WinLabel = uicontrol('Style','text',...
+        'Position',[875 175 50 20], 'String','Win','Fontsize',13);
+    
+        BpodSystem.GUIHandles.Win = uicontrol('Style','edit',...
+        'Position',[925 175 50 20], 'String',20,'Fontsize',13);
+         
+        BpodSystem.GUIHandles.nToPlotLabel = uicontrol('Style','text',...
+        'Position',[875 150 50 20], 'String','N','Fontsize',13);
+    
+        BpodSystem.GUIHandles.nToPlot = uicontrol('Style','edit',...
+        'Position',[925 150 50 20], 'String',100,'Fontsize',13);
+    
+        BpodSystem.GUIHandles.PerfLabel = uicontrol('Style','text',...
+        'Position',[875 110 100 20], 'String','','Fontsize',13);
+        
+         nToPlot = str2double(BpodSystem.GUIHandles.nToPlot.String);
+         
+         set(AxesHandle,'TickDir', 'out','XLim',[1 nToPlot],'YLim', [-0.1, 1.1], 'YTick', [0:0.25:1]);
+         ylabel(AxesHandle,'Performance');
+         hold (AxesHandle,'on');
+         indxToPlot = 1:nToPlot;
+         plot(AxesHandle,indxToPlot,0.5*ones(size(indxToPlot)),'k--')
+         
+         PerformanceVec = nan(nToPlot,1);
+         TrialType1Perf = nan(nToPlot,1);
+         TrialType2Perf = nan(nToPlot,1);
+         ValidTrialsFractionVec = nan(nToPlot,1);
+         
          
     case 'update'
         lastTrial = varargin{1};
@@ -102,25 +120,30 @@ switch Action
                     0 1 0; ...   %fraction of correct trials
                     1 0.5 0; ... %fraction correct LEFT trials
                     0.5 0 1];    %fraction correct RIGHT trials
+                
+        nToPlot = str2double(BpodSystem.GUIHandles.nToPlot.String);
+        Win = str2double(BpodSystem.GUIHandles.Win.String);
         
         PrevValidTrialsCount = sum(OutcomeRecord(1:lastTrial)>=0); %count number of valid (complete) trials
         SideList = SideList(OutcomeRecord >= 0);
         ValidTrials = OutcomeRecord(OutcomeRecord >= 0); %completed trials
         
-        [mn,mx] = scaleX(AxesHandle,lastTrial,NtrialsToPlot);
+        [mn,mx] = scaleX(AxesHandle,lastTrial,nToPlot);
 
          
         if lastTrial > 0
             %compute fraction of valid trials, i.e. complete trials (no early withdrawals)
-            trialsToInclude = max(1,lastTrial -windowSizeToAverage + 1 ): lastTrial; %in average
+            trialsToInclude = max(1,lastTrial -Win + 1 ): lastTrial; %in average
             indxToPlot = mn:mx;
             ValidTrialsFractionVec(lastTrial) = mean(OutcomeRecord(trialsToInclude) >= 0);
             h1 = plot(AxesHandle,indxToPlot,ValidTrialsFractionVec(indxToPlot),'s','MarkerFaceColor',colors(1,:),'MarkerEdgeColor', colors(1,:),'MarkerSize',markersize);
 
             %compute & plot total performance
-            trialsToInclude = max(1,PrevValidTrialsCount - windowSizeToAverage + 1):PrevValidTrialsCount; %for performance only use completed (valid) trials
+            trialsToInclude = max(1,PrevValidTrialsCount - Win + 1):PrevValidTrialsCount; %for performance only use completed (valid) trials
             PerformanceVec(lastTrial) = mean(OutcomeRecord(trialsToInclude)== 1);
             h2 = plot(AxesHandle,indxToPlot,PerformanceVec(indxToPlot),'s','MarkerFaceColor',colors(2,:),'MarkerEdgeColor', colors(2,:),'MarkerSize',markersize);
+            
+            BpodSystem.GUIHandles.PerfLabel.String = num2str(PerformanceVec(lastTrial),'%2.0');
             
             %compute & plot performance for each trial type (i.e side)
             if ~isempty(SideList)

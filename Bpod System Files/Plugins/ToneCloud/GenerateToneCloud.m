@@ -26,8 +26,6 @@ toneAtt = [ones(1,nFreq)' ones(1,nFreq)']; % This will be used to attenuate (not
 nTones_Evidence = nTones - nTones_noEvidence; % Number of tones with controlled evidence
 ramp = StimSettings.ramp; % Fraction of tone duration that is used for the envelope
 
-
-
 seed = 1;
 % if ~isnan(seed) 
 %     rand('twister',seed);
@@ -113,7 +111,7 @@ for ind = 1:length(cloud)
     %uncomment for using two channels
     %out(2,tonePos) = out(2,tonePos) + tones(:,ind)'*Amps(ind,2)';
     
-    cloud_toplot(ind,tonePos) = cloud(1,ind); 
+    cloud_toplot(cloud(ind),tonePos) = cloud(1,ind); 
 end
 
 %%plot waveform

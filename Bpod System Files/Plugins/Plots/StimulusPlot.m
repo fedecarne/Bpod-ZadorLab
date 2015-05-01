@@ -1,23 +1,4 @@
-%{
-----------------------------------------------------------------------------
 
-This file is part of the Bpod Project
-Copyright (C) 2014 Joshua I. Sanders, Cold Spring Harbor Laboratory, NY, USA
-
-----------------------------------------------------------------------------
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3.
-
-This program is distributed  WITHOUT ANY WARRANTY and without even the 
-implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-%}
-% function OutcomePlot(AxesHandle,TrialTypeSides, OutcomeRecord, CurrentTrial)
 function StimulusPlot(AxesHandle, Action, varargin)
 %% 
 % Plug in to Plot Stimulus
@@ -46,7 +27,9 @@ switch Action
             BpodSystem.GUIHandles.Stimulus(i) = line([0 0],[0 0]);
         end
         
-        ylabel(AxesHandle, 'Stimulus', 'FontSize', 18);
+        BpodSystem.GUIHandles.RTline = line([0/0 0/0],[0 18],'Color',[1 0 0]);
+        
+        ylabel(AxesHandle, 'Frequency', 'FontSize', 18);
         xlabel(AxesHandle, 'Time', 'FontSize', 18);
         hold(AxesHandle, 'on');
         
@@ -58,9 +41,14 @@ switch Action
         for i=1:size(BpodSystem.GUIHandles.Stimulus,2)
             BpodSystem.GUIHandles.Stimulus(i).XData =  (1:size(Stimulus,2))/192000;
             BpodSystem.GUIHandles.Stimulus(i).YData =  Stimulus(i,:);
+            if length(varargin)>2
+                tDeliverStimulus = varargin{3};
+                BpodSystem.GUIHandles.RTline.XData = [tDeliverStimulus tDeliverStimulus];
+            end
         end
         
         BpodSystem.GUIHandles.StimulusPlot.YLim = [1 18]; 
+        BpodSystem.GUIHandles.StimulusPlot.XLim = [1 size(Stimulus,2)]/192000; 
         
         title_str = [];
         fnames = fields(StimulusDetails);

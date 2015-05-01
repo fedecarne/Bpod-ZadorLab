@@ -12,7 +12,8 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
         
-    S.GUI.Stage.panel = 'Training Stage'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 1;% Training stage
+    S.GUI.Subject.panel = 'Protocol'; S.GUI.Subject.style = 'text'; S.GUI.Subject.string = BpodSystem.GUIData.SubjectName;    
+    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 1;% Training stage
     
     % Stimulus section
     S.GUI.UseMiddleOctave.panel = 'Stimulus settings'; S.GUI.UseMiddleOctave.style = 'popupmenu'; S.GUI.UseMiddleOctave.string = {'no', 'yes'}; S.GUI.UseMiddleOctave.value = 1;% Training stage
@@ -28,7 +29,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.CenterRewardAmount.panel = 'Reward settings'; S.GUI.CenterRewardAmount.style = 'edit'; S.GUI.CenterRewardAmount.string = 0.5;
     S.GUI.RewardAmount.panel = 'Reward settings'; S.GUI.RewardAmount.style = 'edit'; S.GUI.RewardAmount.string = 2.5;
     S.GUI.FreqSide.panel = 'Reward settings'; S.GUI.FreqSide.style = 'popupmenu'; S.GUI.FreqSide.string = {'LowLeft', 'LowRight'}; S.GUI.FreqSide.value = 1;% Training stage
-    S.GUI.PunishSound.panel = 'Reward settings'; S.GUI.PunishSound.style = 'checkbox'; S.GUI.PunishSound.string = 'Active';  S.GUI.PunishSound.value = 1;
+    S.GUI.PunishSound.panel = 'Reward settings'; S.GUI.PunishSound.style = 'checkbox'; S.GUI.PunishSound.string = 'Active';  S.GUI.PunishSound.value = 0;
     
     % Trial structure section     
     S.GUI.TimeForResponse.panel = 'Trial Structure'; S.GUI.TimeForResponse.style = 'edit'; S.GUI.TimeForResponse.string = 10;
@@ -36,13 +37,13 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     
     S.GUI.PrestimDistribution.panel = 'Prestim Timing'; S.GUI.PrestimDistribution.style = 'popupmenu'; S.GUI.PrestimDistribution.string = {'Delta', 'Uniform', 'Exponential'}; S.GUI.PrestimDistribution.value = 1;% Training stage
     S.GUI.PrestimDurationStart.panel = 'Prestim Timing'; S.GUI.PrestimDurationStart.style = 'edit'; S.GUI.PrestimDurationStart.string = 0.050; % Prestim duration start
-    S.GUI.PrestimDurationEnd.panel = 'Prestim Timing'; S.GUI.PrestimDurationEnd.style = 'edit'; S.GUI.PrestimDurationEnd.string = 0.300; % Prestim duration end
+    S.GUI.PrestimDurationEnd.panel = 'Prestim Timing'; S.GUI.PrestimDurationEnd.style = 'edit'; S.GUI.PrestimDurationEnd.string = 0.050; % Prestim duration end
     S.GUI.PrestimDurationStep.panel = 'Prestim Timing'; S.GUI.PrestimDurationStep.style = 'edit'; S.GUI.PrestimDurationStep.string = 0.050; % Prestim duration end
     S.GUI.PrestimDurationNtrials.panel = 'Prestim Timing'; S.GUI.PrestimDurationNtrials.style = 'edit'; S.GUI.PrestimDurationNtrials.string = 20; % Required number of valid trials before each step    
     S.GUI.PrestimDurationCurrent.panel = 'Prestim Timing'; S.GUI.PrestimDurationCurrent.style = 'text'; S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationStart.string; % Prestim duration end    
     
     S.GUI.SoundDurationStart.panel = 'Stimulus Timing'; S.GUI.SoundDurationStart.style = 'edit'; S.GUI.SoundDurationStart.string = 0.050; % Sound duration start
-    S.GUI.SoundDurationEnd.panel = 'Stimulus Timing'; S.GUI.SoundDurationEnd.style = 'edit'; S.GUI.SoundDurationEnd.string = 0.300; % Sound duration end
+    S.GUI.SoundDurationEnd.panel = 'Stimulus Timing'; S.GUI.SoundDurationEnd.style = 'edit'; S.GUI.SoundDurationEnd.string = 0.500; % Sound duration end
     S.GUI.SoundDurationStep.panel = 'Stimulus Timing'; S.GUI.SoundDurationStep.style = 'edit'; S.GUI.SoundDurationStep.string = 0.050; % Sound duration end
     S.GUI.SoundDurationNtrials.panel = 'Stimulus Timing'; S.GUI.SoundDurationNtrials.style = 'edit'; S.GUI.SoundDurationNtrials.string = 20; % Required number of valid trials before each step
     S.GUI.SoundDurationCurrent.panel = 'Stimulus Timing'; S.GUI.SoundDurationCurrent.style = 'text'; S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationStart.string; % Sound duration end
@@ -65,9 +66,6 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     
 end
 
-% Initialize parameter GUI plugin
-EnhancedBpodParameterGUI('init', S);
-
 %% Define trials
 MaxTrials = 5000;
 TrialTypes = ceil(rand(1,MaxTrials)*2); % correct side for each trial
@@ -83,6 +81,9 @@ BpodSystem.Data.PrestimDuration = []; % The evidence strength of each trial comp
 
 %% Initialize plots
 
+% Initialize parameter GUI plugin
+EnhancedBpodParameterGUI('init', S);
+
 % Outcome plot
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [457 803 1000 163],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
 BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .3 .89 .6]);
@@ -93,17 +94,17 @@ BpodNotebook('init');
 
 % Performance
 BpodSystem.ProtocolFigures.PerformancePlotFig = figure('Position', [455 595 1000 250],'name','Performance plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-BpodSystem.GUIHandles.PerformancePlot = axes('Position', [.075 .3 .89 .6]);
+BpodSystem.GUIHandles.PerformancePlot = axes('Position', [.075 .3 .79 .6]);
 PerformancePlot(BpodSystem.GUIHandles.PerformancePlot,'init')  %set up axes nicely
 
 % Psychometric
 BpodSystem.ProtocolFigures.PsychoPlotFig = figure('Position', [1450 100 400 300],'name','Pshycometric plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.075 .3 .89 .6]);
+BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.2 .25 .75 .65]);
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'init')  %set up axes nicely
 
 % Stimulus plot
-BpodSystem.ProtocolFigures.StimulusPlotFig = figure('Position', [457 803 600 375],'name','Stimulus plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
-BpodSystem.GUIHandles.StimulusPlot = axes('Position', [.075 .3 .89 .6]);
+BpodSystem.ProtocolFigures.StimulusPlotFig = figure('Position', [457 803 500 300],'name','Stimulus plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+BpodSystem.GUIHandles.StimulusPlot = axes('Position', [.15 .2 .75 .65]);
 StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'init',StimulusSettings.nFreq);
 
 %%% Pokes plot
@@ -182,7 +183,11 @@ for currentTrial = 1:MaxTrials
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Prestimulation Duration
 
-    controlStep_nRequiredValid_Prestim = S.GUI.PrestimDurationNtrials.string;
+    if currentTrial==1 %start from the start
+        S.GUI.PrestimDurationCurrent.string =  S.GUI.PrestimDurationStart.string;
+    end
+    
+    controlStep_nRequiredValid_Prestim = S.GUI.PrestimDurationNtrials.string;    
     
     if S.GUI.PrestimDurationStart.string<S.GUI.PrestimDurationEnd.string %step up prestim duration only if start<end
         if S.GUI.SoundDurationCurrent.string >= S.GUI.SoundDurationEnd.string % step up prestim only if stimulus is already at end duration
@@ -217,6 +222,9 @@ for currentTrial = 1:MaxTrials
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Sound Duration
     
+    if currentTrial ==1 % start fromthe start
+        S.GUI.SoundDurationCurrent.string =  S.GUI.SoundDurationStart.string;
+    end
     controlStep_nRequiredValid_Sound = S.GUI.SoundDurationNtrials.string;
     
     if S.GUI.SoundDurationStart.string<S.GUI.SoundDurationEnd.string %step up sound duration only if start<end

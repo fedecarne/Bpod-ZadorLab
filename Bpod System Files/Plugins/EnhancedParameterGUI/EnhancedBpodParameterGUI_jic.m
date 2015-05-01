@@ -17,7 +17,6 @@ See the GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 %}
-
 function varargout = EnhancedBpodParameterGUI(varargin)
 
 % EnhancedBpodParameterGUI('init', ParamStruct) - initializes a GUI with edit boxes for every field in subfield ParamStruct.GUI
@@ -39,7 +38,7 @@ switch Op
         nValues = length(ParamNames);
         ParamStyle = cell(1,nValues);
         ParamString = cell(1,nValues);
-        ParamValues = cell(1,nValues);
+        ParamValues = zeros(1,nValues);
         ParamPanel = cell(1,nValues);
         for x = 1:nValues
             ParamPanel{1,x} = Params.(ParamNames{x}).panel;
@@ -47,22 +46,23 @@ switch Op
             switch Params.(ParamNames{x}).style
                 case 'text'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
-                    ParamValues{1,x} = Params.(ParamNames{x}).string;
+                    ParamValues(1,x) = Params.(ParamNames{x}).string;
                 case 'edit'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
-                    ParamValues{1,x} = Params.(ParamNames{x}).string;
+                    ParamValues(1,x) = Params.(ParamNames{x}).string;
                 case 'popupmenu'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
-                    ParamValues{1,x} = Params.(ParamNames{x}).value;
+                    ParamValues(1,x) = Params.(ParamNames{x}).value;
                 case 'checkbox'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
-                    ParamValues{1,x} = Params.(ParamNames{x}).value;
+                    ParamValues(1,x) = Params.(ParamNames{x}).value;
             end
         end
         
         uniqueParamPanel = unique(ParamPanel);
         nPanels = length(unique(ParamPanel));
         
+        %Vsize = 20+(30*nValues)+70*(nPanels+1)+20;
         Vsize = 20+(30*nValues)+70*(nPanels+1)+20+160;
         
         Width = 300;
@@ -74,7 +74,7 @@ switch Op
         end
         
         
-        BpodSystem.ProtocolFigures.BpodParameterGUI = figure('Position', [100 280 nColumns*Width+20 Vsize],'name',BpodSystem.CurrentProtocolName,'numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
+        BpodSystem.ProtocolFigures.BpodParameterGUI = figure('Position', [100 280 nColumns*Width+20 Vsize],'name','Live Params','numbertitle','off', 'MenuBar', 'none', 'Resize', 'on');
         
         BpodSystem.GUIHandles.ParameterGUI = struct;
         BpodSystem.GUIHandles.ParameterGUI.ParamNames = ParamNames;
@@ -106,7 +106,6 @@ switch Op
                 x = indx_in_panel(j);
                 BpodSystem.GUIHandles.ParameterGUI.Labels(x) = uicontrol('Style', 'text', 'String', ParamNames{x}, 'Position', [11+(column-1)*(Width+5) Pos 2/3*(Width) 25], 'FontWeight', 'normal', 'FontSize', 12, 'BackgroundColor','white', 'FontName', 'Arial','HorizontalAlignment','Center');
                 BpodSystem.GUIHandles.ParameterGUI.ParamValues(x) = uicontrol('Style', ParamStyle{1,x}, 'String', ParamString{x}, 'Position', [10+(column-1)*(Width+5)+Width-1/3*Width Pos+5 1/4*Width 25], 'FontWeight', 'normal', 'FontSize', 12, 'FontName', 'Arial');
-                
                 Pos = Pos - 30;
             end            
             Pos = Pos - 70;
@@ -125,12 +124,12 @@ switch Op
                 case 'text'
                     % text can only be changed from code
                     thisParamInputValue = Params.GUI.(ParamNames{x}).string;
-                    set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String', thisParamInputValue);
+                    set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String', sprintf('%g',thisParamInputValue));
                     thisParamGUIValue = thisParamInputValue;
                     Params.GUI.(BpodSystem.GUIHandles.ParameterGUI.ParamNames{x}).string = thisParamGUIValue;
                 case 'edit'
                     thisParamGUIValue = str2double(get(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String'));
-                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues{x};
+                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x);
                     thisParamInputValue = Params.GUI.(ParamNames{x}).string;
                     if thisParamGUIValue == thisParamLastValue % If the user didn't change the GUI, the GUI can be changed from the input.
                         set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'String', sprintf('%g',thisParamInputValue));
@@ -139,7 +138,7 @@ switch Op
                     Params.GUI.(BpodSystem.GUIHandles.ParameterGUI.ParamNames{x}).string = thisParamGUIValue;
                 case 'popupmenu'
                     thisParamGUIValue = BpodSystem.GUIHandles.ParameterGUI.ParamValues(x).Value;
-                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues{x};
+                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x);
                     thisParamInputValue = Params.GUI.(ParamNames{x}).value;
                     if thisParamGUIValue == thisParamLastValue % If the user didn't change the GUI, the GUI can be changed from the input.
                         set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'Value', thisParamInputValue);
@@ -148,7 +147,7 @@ switch Op
                     Params.GUI.(BpodSystem.GUIHandles.ParameterGUI.ParamNames{x}).value = thisParamGUIValue;
                 case 'checkbox'
                     thisParamGUIValue = BpodSystem.GUIHandles.ParameterGUI.ParamValues(x).Value;
-                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues{x};
+                    thisParamLastValue = BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x);
                     thisParamInputValue = Params.GUI.(ParamNames{x}).value;
                     if thisParamGUIValue == thisParamLastValue % If the user didn't change the GUI, the GUI can be changed from the input.
                         set(BpodSystem.GUIHandles.ParameterGUI.ParamValues(x), 'Value', thisParamInputValue);
@@ -161,7 +160,7 @@ switch Op
                 BpodSystem.GUIHandles.ParameterGUI.ParamValues(x).Enable = Params.GUI.(ParamNames{x}).enable;
             end
             
-            BpodSystem.GUIHandles.ParameterGUI.LastParamValues{x} = thisParamGUIValue;
+            BpodSystem.GUIHandles.ParameterGUI.LastParamValues(x) = thisParamGUIValue;
         end
     varargout{1} = Params;
 end

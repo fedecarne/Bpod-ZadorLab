@@ -1,32 +1,43 @@
-These steps are based on Josh Sanders's indications in https://sites.google.com/site/bpoddocumentation/installing-bpod/ubuntu14.Follow his suggestions for installing Bpod firmware.
+These steps are based on Josh Sanders's indications found in sites.google.com/site/bpoddocumentation/installing-bpod/ubuntu14.
+Follow his suggestions for installing Bpod firmware.
 
 1.Install Ubuntu:
-If the new computer has already Windows installed, you can keep it by making a dual Windows/Ubuntu boot. For that, shrink the Windows partition to a sensible size (100Gb) and select manually create partitions during Ubuntu instalation. Design your partition table by allocating space for swap, root and home.
+If the new computer has Windows, you can keep it by making a dual Windows/Ubuntu boot. For that, shrink the Windows partition to a sensible size (100Gb) and select manually create partitions during Ubuntu instalation. Design your partition table by allocating space for swap (~2 times RAM size), root (50 Gb) and home (the rest).
 
-2. Install the linux- lowlatency package: 
-Run sudo apt-get install linux-lowlatency
+If booting from the USB stick gives "failes ... gfxboot" type live and hit enter.
 
-3. Install Git:
+Shrinking the Windows partition can be problematic due to unmovable Windows files. Right click in OS(C:) and go to disk management, shrink Volume. If the partition cannot be shrink to 100GB, use the Event viewer to find which one is the unmovable file. Go to Computer/Manage/Event Viewer/Windows Logs/Application. Click on filter current log and put 259 for event ID. Click on the last event and find the problematic file. If it is related with System Volume Information, go to System protection and turn off System Restore and clean the stored points. Restart and try again. Unmovable files can also come from the virtual memory . Right click in Computer/Properties/Advanced Settings/Performance (Settings)/Advanced Tab/Virtual Memory (change)/No paging file/Set
+
+2. Update Ubuntu.
+
+3. Physically install Xonar DX sound card.
+
+4. Install the linux-lowlatency package:
+Go to terminal. Run sudo apt-get install linux-lowlatency
+
+5. Install Git:
 Run "sudo apt-get install git"
 
-4. Clone the Bpod-ZadorLab folder from github. Open a Terminal and run:
-git clone  https://github.com/fedecarne/Bpod-ZadorLab.git.
-git pull
+6. Clone the Bpod-ZadorLab folder from github. Open a Terminal and run:
+Go to terminal. Run:	git clone  https://github.com/fedecarne/Bpod-ZadorLab.git.
+			cd Bpod-ZadorLab
+			git pull
 
-5. Install Matlab
+7. Install Matlab.
 
-6. Close Matlab. Open a terminal window and add yourself to the “dialout” group:
-    sudo usermod -a -G dialout "username"
+8. Close Matlab. Open a terminal window and add yourself to the “dialout” group:
+Go to terminal. Run: 	sudo usermod -a -G dialout "username"
 
 7. Explain to MATLAB that /dev/ttyACMx are valid serial ports:
-from terminal, launch the editor as root. Run: sudo gedit
+from terminal, launch the editor as root. 
+Go to terminal. Run: 	cd /usr/local/MATLAB/R2014b/bin/glnxa64 
+			sudo gedit java.opts
+
 Paste the following line into the text editor:
 
     -Dgnu.io.rxtx.SerialPorts=/dev/ttyS0:/dev/ttyS1:/dev/USB0:/dev/ttyACM0
 
-Save the file as java.opts to the following location:
-
-    /usr/local/MATLAB/R2014b/bin/glnxa64
+Save and close.
 
 8. Set the sound subsystem to “no attenuation”:
 From terminal, run: alsamixer
@@ -34,7 +45,7 @@ Ensure that Card: shows Xonar DX. Select each slider *EXCEPT for the front L&R* 
 Press “Esc” to save and exit. Without this step, audio card sync pulses will not be sent.
 
 9. Install PsychToolbox package "octave-psychtoolbox-3" from http://psychtoolbox.org/download/#Linux
-which opens from the Ubuntu Software Manager. Then in Matlab go to usr/local/share/psychotoolbox-3/ and run DownloadAdditionsForLinux(pwd).
+which opens from the Ubuntu Software Manager. Then in Matlab go to usr/share/psychotoolbox-3/ and run DownloadAdditionsForLinux(pwd).
 
 10. Add Bpod-ZadorLab to Matlab path
 
@@ -57,6 +68,9 @@ sudo gedit /etc/fstab
 Add this line
 
 //servername/sharename /media/windowsshare cifs credentials=/home/ubuntuusername/.smbcredentials,iocharset=utf8,sec=ntlm 0 0 
+
+in zadorlab:
+//science.cshl.edu/Zador /media/windowsshare cifs credentials=/home/rig7/.smbcredentials,iocharset=utf8,sec=ntlm 0 0
 
 Finally, test the fstab entry by issuing
 

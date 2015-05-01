@@ -1,23 +1,3 @@
-%{
-----------------------------------------------------------------------------
-
-This file is part of the Bpod Project
-Copyright (C) 2014 Joshua I. Sanders, Cold Spring Harbor Laboratory, NY, USA
-
-----------------------------------------------------------------------------
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, version 3.
-
-This program is distributed  WITHOUT ANY WARRANTY and without even the
-implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-%}
-% function OutcomePlot(AxesHandle,TrialTypeSides, OutcomeRecord, CurrentTrial)
 function PsychoPlot(AxesHandle, Action, varargin)
 %%
 % Plug in to Plot Psychometric curve in real time
@@ -43,21 +23,21 @@ global BpodSystem
 switch Action
     case 'init'
         
-        bin_size =0.1;
+        bin_size = 0.1;
         
         axes(AxesHandle);
         %plot in specified axes
         Xdata = -1:bin_size:1; Ydata=nan(1,size(Xdata,2));
         BpodSystem.GUIHandles.PsychometricLine = line([Xdata,Xdata],[Ydata,Ydata],'LineStyle','none','Marker','o','MarkerEdge','k','MarkerFace','k', 'MarkerSize',6);
         BpodSystem.GUIHandles.PsychometricData = [Xdata',Ydata'];
-        set(AxesHandle,'TickDir', 'out', 'XLim', [-1, 1],'YLim', [0, 1], 'FontSize', 16);
-        xlabel(AxesHandle, 'Evidence Strength', 'FontSize', 18);
-        ylabel(AxesHandle, 'P(Right)', 'FontSize', 18);
+        set(AxesHandle,'TickDir', 'out', 'XLim', [-1, 1],'YLim', [0, 1], 'FontSize', 15);
+        xlabel(AxesHandle, 'Evidence Strength', 'FontSize', 15);
+        ylabel(AxesHandle, 'P(Right)', 'FontSize', 15);
         hold(AxesHandle, 'on');
         
     case 'update'
         try
-            
+
         CurrentTrial = varargin{1};
         SideList = varargin{2};
         OutcomeRecord = varargin{3};
@@ -68,22 +48,28 @@ switch Action
         
         evidence_ind = round(EvidenceStrength/bin_size);
         
-        if evidence_ind(CurrentTrial)>0
+        if evidence_ind(CurrentTrial)>0 %evidence is nonzero 
+            
             ntrials = sum(evidence_ind==evidence_ind(CurrentTrial) & SideList(1:CurrentTrial)==SideList(CurrentTrial) & OutcomeRecord(1:CurrentTrial)>=0);
             ntrials_correct = sum(evidence_ind==evidence_ind(CurrentTrial) & SideList(1:CurrentTrial)==SideList(CurrentTrial) & OutcomeRecord(1:CurrentTrial)==1);
             
             [p c] = binofit(ntrials_correct,ntrials);
-        else
-            ntrials = sum(evidence_ind==0 & OutcomeRecord(1:CurrentTrial)>=0);
-            ntrials_correct = sum(SideList(1:CurrentTrial)==1 && OutcomeRecord(1:CurrentTrial)==1 || SideList(1:CurrentTrial)==0 && OutcomeRecord(1:CurrentTrial)==0);
+
+            if SideList(CurrentTrial)==0 %0 is right
+                Ydata((size(Xdata,1)-1)/2 + 1 + evidence_ind(CurrentTrial)) = p; %correct is right
+            else %1 is left
+                Ydata((size(Xdata,1)-1)/2 + 1 - evidence_ind(CurrentTrial)) = 1-p; %correct is left
+            end
             
-            [p c] = binofit(ntrials_correct,ntrials);
-        end
-               
-        if SideList(CurrentTrial)==0
-            Ydata((size(Xdata,1)-1)/2 + 1 + evidence_ind(CurrentTrial)) = p;
-        else
-            Ydata((size(Xdata,1)-1)/2 + 1 - evidence_ind(CurrentTrial)) = 1-p;
+        else %evidence is zero, this assumes that SideList == 0 when the side is right
+            
+            ntrials = sum(evidence_ind==0 & OutcomeRecord(1:CurrentTrial)>=0);
+            ntrials_right = sum(evidence_ind==0 & OutcomeRecord(1:CurrentTrial)>=0 & SideList(1:CurrentTrial)==0);
+            
+            [p c] = binofit(ntrials_right,ntrials);
+            
+            Ydata((size(Xdata,1)-1)/2 + 1) = p;
+        
         end
         
         set(BpodSystem.GUIHandles.PsychometricLine, 'xdata', [Xdata], 'ydata', [Ydata]);

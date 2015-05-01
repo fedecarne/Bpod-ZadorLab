@@ -65,7 +65,7 @@ switch action
   %% update    
   case 'update'
       
-    figure(BpodSystem.ProtocolFigures.PokesPlot);axes(BpodSystem.GUIHandles.PokesPlot.PokesPlotAxis)
+    %figure(BpodSystem.ProtocolFigures.PokesPlot);axes(BpodSystem.GUIHandles.PokesPlot.PokesPlotAxis)
     current_trial = BpodSystem.Data.nTrials;
     last_n = str2double(BpodSystem.GUIHandles.PokesPlot.Lastn.String);
     
