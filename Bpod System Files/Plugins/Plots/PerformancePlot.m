@@ -96,21 +96,23 @@ switch Action
         BpodSystem.GUIHandles.PerfLabel = uicontrol('Style','text',...
         'Position',[875 110 100 20], 'String','','Fontsize',13);
         
-         nToPlot = str2double(BpodSystem.GUIHandles.nToPlot.String);
-         
-         set(AxesHandle,'TickDir', 'out','XLim',[1 nToPlot],'YLim', [-0.1, 1.1], 'YTick', [0:0.25:1]);
-         ylabel(AxesHandle,'Performance');
-         hold (AxesHandle,'on');
-         indxToPlot = 1:nToPlot;
-         plot(AxesHandle,indxToPlot,0.5*ones(size(indxToPlot)),'k--')
-         
-         PerformanceVec = nan(nToPlot,1);
-         TrialType1Perf = nan(nToPlot,1);
-         TrialType2Perf = nan(nToPlot,1);
-         ValidTrialsFractionVec = nan(nToPlot,1);
-         
+        max_trials = 2000;
+        nToPlot = str2double(BpodSystem.GUIHandles.nToPlot.String);        
+        
+        ylabel(AxesHandle,'Performance');
+        hold (AxesHandle,'on');
+        indxToPlot = 1:max_trials;
+        plot(AxesHandle,indxToPlot,0.5*ones(size(indxToPlot)),'k--')
+        set(AxesHandle,'TickDir', 'out','XLim',[1 nToPlot],'YLim', [-0.1, 1.1], 'YTick', [0:0.25:1]);
+                
+        PerformanceVec = nan(max_trials,1);
+        TrialType1Perf = nan(max_trials,1);
+        TrialType2Perf = nan(max_trials,1);
+        ValidTrialsFractionVec = nan(max_trials,1);
+        
          
     case 'update'
+
         lastTrial = varargin{1};
         SideList = varargin{2};
         OutcomeRecord = varargin{3};
@@ -160,7 +162,7 @@ switch Action
 
             BpodSystem.GUIHandles.SessionTime.String = ['Time: ' num2str(toc(SessionBirthdate)/60,'%3.0f') ' min'];
                         
-            BpodSystem.GUIHandles.DeliveredWater.String = ['Delivered Water: ' num2str(BpodSystem.Data.AccumulatedReward) ' ul'];
+            BpodSystem.GUIHandles.DeliveredWater.String = ['Water: ' num2str(BpodSystem.Data.AccumulatedReward) ' ul'];
             
             BpodSystem.GUIHandles.ValidTrials.String = ['Valid trials: ' num2str(nansum(OutcomeRecord >= 0))];
             

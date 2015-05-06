@@ -406,7 +406,7 @@ for currentTrial = 1:MaxTrials
         UpdatePerformancePlot(TrialTypes, Outcomes,SessionBirthdate);
         UpdatePsychoPlot(TrialTypes, Outcomes);
         
-        tDeliverStimulus = diff(BpodSystem.Data.RawEvents.Trial{1, 1}.States.DeliverStimulus);
+        tDeliverStimulus = diff(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.DeliverStimulus);
         UpdateStimulusPlot(Cloud_toplot,tDeliverStimulus);
         
         PokesPlot('update');
