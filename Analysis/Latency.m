@@ -11,13 +11,14 @@ result_path = ['~/../../media/fede/Data/Data-on-Satellite/AAAApostdoc/zador/rese
 mkdir(result_path);
 
 subjectpath = '../Data/';
-subject_prefix = 'FT';
+subject_prefix = 'FT'; protocol = 'ToneCloudsFixedTime';
+%subject_prefix = 'RT'; protocol = 'ToneClouds4BPod';
+
 
 subjects = dir([subjectpath '/' subject_prefix '*']);
 subjects={subjects.name}'; %session files ordered by date
 n_subjects = size(subjects,1);
 
-protocol = 'ToneCloudsFixedTime';
 
 latency = cell(1,n_subjects);
 for m=1:n_subjects
@@ -37,14 +38,20 @@ for m=1:n_subjects
     nTrials = cell(nSessions,1);
     for i=1:nSessions
 
+        try
         load([datapath files{i,:}])
-
+        catch
+            disp(['Couldn`t load file: ' files{i,:}])
+            break
+        end
+        
         nTrials{i,1} = size(SessionData.TrialTypes,2);
         
         latency{1,m}{1,i} = nan(1,nTrials{i,1});
         for j=1:nTrials{i,1}
         
-            if isfield(SessionData.RawEvents.Trial{1,j}.Events,'BNC1High')
+            if isfield(SessionData.RawEvents.Trial{1,j}.Events,'BNC1High')...
+                && isfield(SessionData.RawEvents.Trial{1,j}.Events,'BNC2High')
                 t1 = SessionData.RawEvents.Trial{1,j}.Events.BNC1High; %time when 'play' instruction is sent from arduino
                 t2 = SessionData.RawEvents.Trial{1,j}.Events.BNC2High; %time when sound is actually played
                 try
@@ -62,7 +69,7 @@ end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% latency histogram
-figure%('Visible','Off')
+figure('Visible','Off')
 set(gcf, 'PaperUnits', 'inches')
 set(gcf, 'PaperSize',figure_size)
 set(gcf, 'PaperPosition',[0 0 figure_size])
@@ -88,14 +95,14 @@ text(x(ind)+20,f(ind),[num2str(x(ind),'%2.2f') ' ms' ],'FontSize',font_size)
 title('Latency')
 print('-dpng', [result_path 'latency_hist.png']);
 print('-dpdf', [result_path 'latency_hist.pdf']);
-%close
+close
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% latency histogram per session and subject
 for m=1:n_subjects
-    figure%('Visible','Off')
+    figure('Visible','Off')
     set(gcf, 'PaperUnits', 'inches')
     set(gcf, 'PaperSize',[10 10])
     set(gcf, 'PaperPosition',[0 0 10 10])
@@ -137,6 +144,6 @@ for m=1:n_subjects
     title('Latency')
     print('-dpng', [result_path subjects{m,1} '_latency_hist.png']);
     print('-dpdf', [result_path subjects{m,1} '_latency_hist.pdf']);
-    %close
+    close
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end

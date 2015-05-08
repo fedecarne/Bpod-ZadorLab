@@ -164,9 +164,9 @@ switch Action
                         
             BpodSystem.GUIHandles.DeliveredWater.String = ['Water: ' num2str(BpodSystem.Data.AccumulatedReward) ' ul'];
             
-            BpodSystem.GUIHandles.ValidTrials.String = ['Valid trials: ' num2str(nansum(OutcomeRecord >= 0))];
+            BpodSystem.GUIHandles.ValidTrials.String = ['Valid trials: ' num2str(sum(OutcomeRecord >= 0))];
             
-            BpodSystem.GUIHandles.CorrectTrials.String = ['Correct trials: ' num2str(nansum(OutcomeRecord > 0))];
+            BpodSystem.GUIHandles.CorrectTrials.String = ['Correct trials: ' num2str(sum(OutcomeRecord > 0))];
             
             BpodSystem.GUIHandles.TotalTrials.String = ['Total trials: ' num2str(sum(~isnan(OutcomeRecord)))];
 try
