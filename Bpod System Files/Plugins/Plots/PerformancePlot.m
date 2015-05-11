@@ -103,7 +103,7 @@ switch Action
         hold (AxesHandle,'on');
         indxToPlot = 1:max_trials;
         plot(AxesHandle,indxToPlot,0.5*ones(size(indxToPlot)),'k--')
-        set(AxesHandle,'TickDir', 'out','XLim',[1 nToPlot],'YLim', [-0.1, 1.1], 'YTick', [0:0.25:1]);
+        set(AxesHandle,'TickDir', 'out','XLim',[1 nToPlot],'YLim', [-0.1, 1.1], 'YTick', 0:0.25:1);
                 
         PerformanceVec = nan(max_trials,1);
         TrialType1Perf = nan(max_trials,1);

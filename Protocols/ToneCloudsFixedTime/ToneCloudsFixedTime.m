@@ -48,6 +48,12 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SoundDurationNtrials.panel = 'Stimulus Timing'; S.GUI.SoundDurationNtrials.style = 'edit'; S.GUI.SoundDurationNtrials.string = 20; % Required number of valid trials before each step
     S.GUI.SoundDurationCurrent.panel = 'Stimulus Timing'; S.GUI.SoundDurationCurrent.style = 'text'; S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationStart.string; % Sound duration end
     
+    S.GUI.MemoryDurationStart.panel = 'Memory Timing'; S.GUI.MemoryDurationStart.style = 'edit'; S.GUI.MemoryDurationStart.string = 0; % Memory duration start
+    S.GUI.MemoryDurationEnd.panel = 'Memory Timing'; S.GUI.MemoryDurationEnd.style = 'edit'; S.GUI.MemoryDurationEnd.string = 0; % Memory duration end
+    S.GUI.MemoryDurationStep.panel = 'Memory Timing'; S.GUI.MemoryDurationStep.style = 'edit'; S.GUI.MemoryDurationStep.string = 0.010; % Memory duration end
+    S.GUI.MemoryDurationNtrials.panel = 'Memory Timing'; S.GUI.MemoryDurationNtrials.style = 'edit'; S.GUI.MemoryDurationNtrials.string = 20; % Required number of valid trials before each step
+    S.GUI.MemoryDurationCurrent.panel = 'Memory Timing'; S.GUI.MemoryDurationCurrent.style = 'text'; S.GUI.MemoryDurationCurrent.string = S.GUI.MemoryDurationStart.string; % Memory duration end
+    
     % Antibias
     S.GUI.Antibias.panel = 'Antibias'; S.GUI.Antibias.style = 'popupmenu'; S.GUI.Antibias.string = {'no', 'yes'}; S.GUI.Antibias.value = 1;% Training stage
     
@@ -72,6 +78,7 @@ TrialTypes = ceil(rand(1,MaxTrials)*2); % correct side for each trial
 EvidenceStrength = nan(1,MaxTrials); % evidence strength for each trial
 PrestimDuration = nan(1,MaxTrials); % prestimulation delay period for each trial
 SoundDuration = nan(1,MaxTrials); % sound duration period for each trial
+MemoryDuration = nan(1,MaxTrials); % sound duration period for each trial
 Outcomes = nan(1,MaxTrials);
 AccumulatedReward=0;
 
@@ -112,6 +119,7 @@ state_colors = struct( ...
         'WaitForCenterPoke', [0.5 0.5 1],...
         'Delay',0.3*[1 1 1],...
         'DeliverStimulus', 0.75*[1 1 0],...
+        'Memory', 0.75*[0.25 1 0.5],...
         'GoSignal',[0.5 1 1],...        
         'Reward',[0,1,0],...
         'Drinking',[0,0,1],...
@@ -172,6 +180,7 @@ CenterValveCode = 2;
 % Control the step up of prestimulus period and stimulus duration
 controlStep_Prestim = 0; % valid trial counter
 controlStep_Sound = 0; % valid trial counter
+controlStep_Memory = 0; % valid trial counter
 
 %% Main trial loop
 for currentTrial = 1:MaxTrials
@@ -222,7 +231,7 @@ for currentTrial = 1:MaxTrials
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %Sound Duration
     
-    if currentTrial ==1 % start fromthe start
+    if currentTrial ==1 % start from the start
         S.GUI.SoundDurationCurrent.string =  S.GUI.SoundDurationStart.string;
     end
     controlStep_nRequiredValid_Sound = S.GUI.SoundDurationNtrials.string;
@@ -246,6 +255,35 @@ for currentTrial = 1:MaxTrials
     SoundDuration(currentTrial) = S.GUI.SoundDurationCurrent.string;
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % MemoryDuration
+    
+    if currentTrial ==1 % start from the start
+        S.GUI.MemoryDurationCurrent.string =  S.GUI.MemoryDurationStart.string;
+    end
+    controlStep_nRequiredValid_Memory = S.GUI.MemoryDurationNtrials.string;
+    
+    if S.GUI.MemoryDurationStart.string<S.GUI.MemoryDurationEnd.string %step up memory duration only if start<end
+        if controlStep_Memory > controlStep_nRequiredValid_Memory
+
+            controlStep_Memory = 0; %restart counter
+
+            % step up, unless we are at the max
+            if S.GUI.MemoryDurationCurrent.string + S.GUI.MemoryDurationStep.string > S.GUI.MemoryDurationEnd.string
+                S.GUI.MemoryDurationCurrent.string = S.GUI.MemoryDurationEnd.string;
+            else
+                S.GUI.MemoryDurationCurrent.string = S.GUI.MemoryDurationCurrent.string + S.GUI.MemoryDurationStep.string;
+            end
+        end
+    else
+       S.GUI.MemoryDurationCurrent.string =  S.GUI.MemoryDurationStart.string;
+    end
+        
+    MemoryDuration(currentTrial) = S.GUI.MemoryDurationCurrent.string;
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    
     R = GetValveTimes(S.GUI.RewardAmount.string, [1 3]); LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
     C = GetValveTimes(S.GUI.CenterRewardAmount.string, 2); CenterValveTime = C(1);
 
@@ -332,7 +370,7 @@ for currentTrial = 1:MaxTrials
             sma = AddState(sma, 'Name', 'DeliverStimulus', ...
                 'Timer', SoundDuration(currentTrial),...
                 'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
-                'OutputActions', {'SoftCode', 1, 'BNCState', 1});
+                'OutputActions', {'SoftCode', 1, 'BNCState', 1}); 
             sma = AddState(sma, 'Name', 'GoSignal', ...
                 'Timer', CenterValveTime,...
                 'StateChangeConditions', {'Tup', 'Reward'},...
@@ -379,10 +417,23 @@ for currentTrial = 1:MaxTrials
                 'Timer', PrestimDuration(currentTrial),...
                 'StateChangeConditions', {'Tup', 'DeliverStimulus', 'Port2Out', 'EarlyWithdrawal'},...
                 'OutputActions', {});
+%             sma = AddState(sma, 'Name', 'DeliverStimulus', ...
+%                 'Timer', SoundDuration(currentTrial),...
+%                 'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
+%                 'OutputActions', {'SoftCode', 1, 'BNCState', 1});
+
+%%%
             sma = AddState(sma, 'Name', 'DeliverStimulus', ...
                 'Timer', SoundDuration(currentTrial),...
-                'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
+                'StateChangeConditions', {'Tup', 'Memory', 'Port2Out', 'EarlyWithdrawal'},...
                 'OutputActions', {'SoftCode', 1, 'BNCState', 1});
+
+            sma = AddState(sma, 'Name', 'Memory', ...
+                'Timer', MemoryDuration(currentTrial),...
+                'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
+                'OutputActions', {});
+%%%        
+
             sma = AddState(sma, 'Name', 'GoSignal', ...
                 'Timer', CenterValveTime,...
                 'StateChangeConditions', {'Tup', 'WaitForResponse'},...
@@ -422,9 +473,10 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
-        BpodSystem.Data.EvidenceStrength(currentTrial) = EvidenceStrength(currentTrial); % Adds the evidence strength of the current trial to data
-        BpodSystem.Data.PrestimDuration(currentTrial) = PrestimDuration(currentTrial); % Adds the evidence strength of the current trial to data
-        BpodSystem.Data.SoundDuration(currentTrial) = SoundDuration(currentTrial); % Adds the evidence strength of the current trial to data
+        BpodSystem.Data.EvidenceStrength(currentTrial) = EvidenceStrength(currentTrial); 
+        BpodSystem.Data.PrestimDuration(currentTrial) = PrestimDuration(currentTrial); % 
+        BpodSystem.Data.SoundDuration(currentTrial) = SoundDuration(currentTrial); % 
+        BpodSystem.Data.MemoryDuration(currentTrial) = MemoryDuration(currentTrial); % 
         BpodSystem.Data.StimulusSettings = StimulusSettings; % Save Stimulus settings
         BpodSystem.Data.Cloud{currentTrial} = Cloud; % Saves Stimulus 
         
@@ -434,10 +486,12 @@ for currentTrial = 1:MaxTrials
             AccumulatedReward = AccumulatedReward+S.GUI.RewardAmount.string;
             controlStep_Prestim = controlStep_Prestim+1; % update because this is a valid trial
             controlStep_Sound = controlStep_Sound+1; % update because this is a valid trial
+            controlStep_Memory = controlStep_Memory+1;
         elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Punish(1))
             Outcomes(currentTrial) = 0;
             controlStep_Prestim = controlStep_Prestim+1; % update because this is a valid trial
             controlStep_Sound = controlStep_Sound+1; % update because this is a valid trial
+            controlStep_Memory = controlStep_Memory+1; % update because this is a valid trial
         else
             Outcomes(currentTrial) = -1;
         end

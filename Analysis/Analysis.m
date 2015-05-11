@@ -2,6 +2,9 @@ clear
 close all
 clc
 
+warning('error', 'stats:glmfit:IllConditioned');
+warning('error', 'stats:glmfit:PerfectSeparation');
+
 font_size = 12;
 figure_size = [4 3];
 
@@ -76,7 +79,8 @@ for m=1:n_subjects
     psycho_regress = cell(nSessions,1);
     psycho_logit = cell(nSessions,1);
     psycho_kernel = cell(nSessions,1);
-    psycho_kernel2 = cell(nSessions,1);
+    psycho_kernel_bstp = cell(nSessions,1);
+    psycho_kernel_freq = cell(nSessions,1);
     performance  = cell(nSessions,1);
     evidence_power = cell(nSessions,1);
     valid  = cell(nSessions,1);
@@ -87,7 +91,6 @@ for m=1:n_subjects
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % Psychometric
-        
         warmup = 50;
         cooldown = 10;
         to_include = warmup:nTrials{i,1}-cooldown;
@@ -99,6 +102,7 @@ for m=1:n_subjects
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % fitting psycho curve
         x = psycho{i,1}.x;
         y = psycho{i,1}.y;
         [b,bint,r,rint,stats] = regress(log(y'./(1-y')),[ones(size(x,2),1) x']) ;
@@ -106,6 +110,7 @@ for m=1:n_subjects
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % logistic regression
         to_include = outcomeRecord{i,1}~=-1;
         to_include = logical([zeros(1,warmup) to_include(warmup+1:nTrials{i,1}-cooldown) zeros(1,cooldown)]);
         x = (2*sideList{i,1}(to_include)-3)'.*evidenceStrength{i,1}(to_include)';
@@ -114,16 +119,19 @@ for m=1:n_subjects
         psycho_logit{i,1} = b;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 
+        if i ==13
+            disp('')
+        end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % psychophysical kernel
-        max_t=size(cloud{i,1}{1,nTrials{i,1}},2);
-        minTrial=50;
+        max_t = 50; % max number of tones, which I don't know in advace. not the most efficient way...
+        minTrial = 50;
         for t=1:max_t
             
             s=nan(nTrials{i,1},1);
             for j=1:nTrials{i,1}
-                if size(cloud{i,1}{1,j},2)>t
+                if size(cloud{i,1}{1,j},2)>=t
                     s(j,1) = cloud{i,1}{1,j}(1,t);
                 end
             end
@@ -133,12 +141,17 @@ for m=1:n_subjects
                 to_include = outcomeRecord{i,1}~=-1;
                 to_include = logical([zeros(1,warmup) to_include(warmup+1:nTrials{i,1}-cooldown) zeros(1,cooldown)]);
                 
+                %%% kernel with frequency (1 or -1)
                 x = s(to_include)>9.5;
-                x = (x-nanmean(x))./nanstd(x);                
+                x = 2*(s(to_include)>9.5)-1;
+%                 x = (x-nanmean(x))./nanstd(x);                
                 y = (sideList{i,1}(to_include)-1)'== outcomeRecord{i,1}(to_include)';
                 [b,dev,stats] = glmfit(x,y,'binomial','link','logit');
                 psycho_kernel{i,1}(:,t) = b;
-                
+                for k=1:50
+                    [b,dev,stats] = glmfit(x,y(randperm(size(y,1))),'binomial','link','logit');
+                    psycho_kernel_bstp{i,1}(k,t) = b(2);
+                end
                
 %                 yfit = glmval(psycho_kernel{i,1}(:,t),x,'logit');
 %                 plot(x,yfit,'b')
@@ -149,15 +162,27 @@ for m=1:n_subjects
 %                 plot(x,yfit,'r')
                 
                 
-                x = s(to_include);
-                x = (x-nanmean(x))./nanstd(x);
+                %%% kernel with the index of frequency
+                x = 0*ones(sum(to_include),18);
+                to_include_indx = find(to_include);
+                for k=1:sum(to_include)
+                    if ~isnan(s(to_include_indx(k),1))
+                            x(k,s(to_include_indx(k),1))=1;
+                    end
+                end
+%                 x = bsxfun(@minus, x, mean(x));
+%                 x = bsxfun(@rdivide, x, nanstd(x,0,1));
                 y = (sideList{i,1}(to_include)-1)'== outcomeRecord{i,1}(to_include)';
-                [b,dev,stats] = glmfit(x,y,'binomial','link','logit');
-                psycho_kernel2{i,1}(:,t) = b;
+                try
+                [b,dev,stats] = glmfit([x(:,1:6) x(:,13:18)],y,'binomial','link','logit');
+                catch %catch ill-conditioned X and max number of iterations
+                 b = nan(13,1);
+                end
+                psycho_kernel_freq{i,1}(:,t) = b;
             
             else
                 psycho_kernel{i,1}(:,t) = nan(2,1);
-                psycho_kernel2{i,1}(:,t) = nan(2,1);
+                psycho_kernel_freq{i,1}(:,t) = nan(13,1);
             end
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -193,8 +218,6 @@ for m=1:n_subjects
         a = outcome(1:end);
         mean_performance(1,i) = mean(sum(a>0)/sum(a>=0));
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % valid trials
@@ -261,9 +284,14 @@ for m=1:n_subjects
     for i=1:nSessions
         subplot(floor(sqrt(nSessions)),ceil(nSessions/floor(sqrt(nSessions))),i)
         hold on
-        plot(psycho_kernel{i,1}(2,:))
-        plot(psycho_kernel2{i,1}(2,:))
-        axis([1 16 -1 1])
+        plot(psycho_kernel_bstp{i,1},'color',[0.7 0.7 0.7],'linewidth',0.5)
+        axis([1 sum(~isnan(psycho_kernel{i,1}(1,:))) -0.5 2])
+        xlim = get(gca,'Xlim');
+        ylim = get(gca,'Ylim');
+        plot(psycho_kernel{i,1}(2,:),'color',[0.1 0.1 0.8],'linewidth',1.5)
+        plot(xlim,[1 1]*psycho_logit{i,1}(2,:),'color',[0.75 0.5 0.25],'linewidth',0.5)
+        title(['n: ' num2str(n_difficulties(i,1))],'FontSize',10)
+        %text(0.75*xlim(2),0.75*ylim(2),['n: ' num2str(n_difficulties(i,1))],'FontSize',10)
         if i==1
         xlabel('Time','FontSize',font_size)
         ylabel('Coeff','FontSize',font_size)
@@ -276,8 +304,32 @@ for m=1:n_subjects
     close
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% psychometric
+    %% psychophysical kernel with freq
+    figure('Visible','Off')
+    set(gcf, 'PaperUnits', 'inches')
+    set(gcf, 'PaperSize',[10 10])
+    set(gcf, 'PaperPosition',[0 0 10 10])
+    for i=1:nSessions
+        subplot(floor(sqrt(nSessions)),ceil(nSessions/floor(sqrt(nSessions))),i)
+        hold on
+        imagesc(psycho_kernel_freq{i,1}(2:end,:))
+        axis([1 sum(~isnan(psycho_kernel_freq{i,1}(1,:))) 1 12])
+        if i==1
+            xlabel('','FontSize',font_size)
+            ylabel('','FontSize',font_size)
+        end
+        if i==round(0.5*sqrt(nSessions)), title('Psychophysical Kernel'); end
+        set(gca,'FontSize',font_size)
+    end
+    print('-dpng', [result_path subject '_psychokernel_freq.png']);
+    print('-dpdf', [result_path subject '_psychokernel_freq.pdf']);
+    close
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% response time
     figure('Visible','Off')
     set(gcf, 'PaperUnits', 'inches')
     set(gcf, 'PaperSize',[10 10])
