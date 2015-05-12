@@ -7,17 +7,24 @@ figure_size = [4 3];
 
 subjectpath = '../Data';
 
-subject_prefix = 'FT';
-protocol = 'ToneCloudsFixedTime';
+%subject_prefix = 'FT';
+%protocol = 'ToneCloudsFixedTime';
+
+subject_prefix = 'RT';
+protocol = 'ToneClouds4BPod';
+
 
 time = clock;
 date_time = [date '-' num2str(time(4)) '-' num2str(time(5))];
 result_path = ['~/../../media/fede/Data/Data-on-Satellite/AAAApostdoc/zador/research/b-pod/Results/behavior-' subject_prefix '-' date_time '/'];
 mkdir(result_path);
 
+
 subjects = dir([subjectpath '/' subject_prefix '*']);
 subjects={subjects.name}'; %session files ordered by date
 n_subjects = size(subjects,1);
+
+
 
 for m=1:n_subjects
 
@@ -36,20 +43,23 @@ for m=1:n_subjects
     outcomeRecord = cell(nSessions,1);
     evidenceStrength = cell(nSessions,1);
     n_difficulties = nan(nSessions,1);
-    sound_duration = cell(nSessions,1);
     cloud = cell(nSessions,1);
     rawEvents = cell(nSessions,1);
     task = cell(nSessions,1);
     for i=1:size(files,1)
 
-        load([datapath files{i,:}])
+        try
+            load([datapath files{i,:}])
+        catch
+            disp(['Couldn`t load file: ' files{i,:}])
+%             break
+        end
 
         nTrials{i,1} = size(SessionData.TrialTypes,2);
         sideList{i,1} = SessionData.TrialTypes;
         outcomeRecord{i,1} = SessionData.Outcomes;
         evidenceStrength{i,1} =  SessionData.EvidenceStrength;
         n_difficulties(i,1) =  size(unique(SessionData.EvidenceStrength),2);
-        sound_duration{i,1} = SessionData.SoundDuration;
         cloud{i,1} =  SessionData.Cloud;
         rawEvents{i,1} = SessionData.RawEvents.Trial;
         task{i,1} = char(SessionData.TrialSettings(1,1).GUI.Stage.string(SessionData.TrialSettings(1,1).GUI.Stage.value));
@@ -63,7 +73,6 @@ for m=1:n_subjects
     outcomeRecord = outcomeRecord(fulltask);
     evidenceStrength = evidenceStrength(fulltask);
     n_difficulties = n_difficulties(fulltask);
-    sound_duration = sound_duration(fulltask);
     cloud = cloud(fulltask);
     rawEvents = rawEvents(fulltask);
     task = task(fulltask);
@@ -76,15 +85,14 @@ for m=1:n_subjects
     psycho_regress = cell(nSessions,1);
     psycho_logit = cell(nSessions,1);
     psycho_kernel = cell(nSessions,1);
-    psycho_kernel_ev = cell(nSessions,1);
-    psycho_kernel_bstp_ev = cell(nSessions,1);
+    psycho_kernel_bstp = cell(nSessions,1);
     psycho_kernel_freq = cell(nSessions,1);
     performance  = cell(nSessions,1);
     evidence_power = cell(nSessions,1);
     valid  = cell(nSessions,1);
     mean_performance = nan(1,nSessions);
     mean_valid = nan(1,nSessions);
-    response_time = cell(1,nSessions);
+    response_time = cell(nSessions,1);
     for i=1:nSessions
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,12 +135,12 @@ for m=1:n_subjects
             minTrial = 50;
             for t=1:max_t
                 
-                s = nan(nTrials{i,1},1);
-                ev_t = nan(nTrials{i,1},1);
+                s=nan(nTrials{i,1},1);
                 for j=1:nTrials{i,1}
-                    if size(cloud{i,1}{1,j},2)>=t
-                        s(j,1) = cloud{i,1}{1,j}(1,t);
-                        ev_t(j,1) = sum(cloud{i,1}{1,j}(1,1:size(cloud{i,1}{1,j},2)~=t)>9.5)/sum(cloud{i,1}{1,j}(1,:)>0);
+                    if diff(rawEvents{i,1}{1,j}.States.DeliverStimulus) > t*SessionData.TrialSettings(1,j).GUI.ToneDuration.string
+                        if size(cloud{i,1}{1,j},2)>=t
+                            s(j,1) = cloud{i,1}{1,j}(1,t);
+                        end
                     end
                 end
                 
@@ -142,23 +150,24 @@ for m=1:n_subjects
                     to_include = logical([zeros(1,warmup) to_include(warmup+1:nTrials{i,1}-cooldown) zeros(1,cooldown)]);
                     
                     %%% kernel with frequency (1 or -1)
+                    x = s(to_include)>9.5;
                     x = 2*(s(to_include)>9.5)-1;
                     %                 x = (x-nanmean(x))./nanstd(x);
                     y = (sideList{i,1}(to_include)-1)'== outcomeRecord{i,1}(to_include)';
                     [b,dev,stats] = glmfit(x,y,'binomial','link','logit');
-                    psycho_kernel{i,1}(:,t) = b;       
-                    
-                    
-                    %%% kernel with frequency (1 or -1) and overall evidence
-                    x = (2*(s(to_include)>9.5)-1)/size(cloud{i,1}{1,j},2);
-                    ev = (2*ev_t(to_include)-1);
-                    y = (sideList{i,1}(to_include)-1)'== outcomeRecord{i,1}(to_include)';
-                    [b,dev,stats] = glmfit([x ev],y,'binomial','link','logit');
-                    psycho_kernel_ev{i,1}(:,t) = b;
+                    psycho_kernel{i,1}(:,t) = b;
                     for k=1:50
-                        [b,dev,stats] = glmfit([x(randperm(size(x,1))) ev],y,'binomial','link','logit');
-                        psycho_kernel_bstp_ev{i,1}(k,t) = b(2)/b(3);
+                        [b,dev,stats] = glmfit(x,y(randperm(size(y,1))),'binomial','link','logit');
+                        psycho_kernel_bstp{i,1}(k,t) = b(2);
                     end
+                    
+                    %                 yfit = glmval(psycho_kernel{i,1}(:,t),x,'logit');
+                    %                 plot(x,yfit,'b')
+                    %                 hold on
+                    %                 plot(psycho{i,1}.x,psycho{i,1}.y,'o')
+                    %                x = -1:0.1:1;
+                    %                 yfit = glmval(psycho_logit{i,1},x,'logit');
+                    %                 plot(x,yfit,'r')
                     
                     
                     %%% kernel with the index of frequency
@@ -181,7 +190,6 @@ for m=1:n_subjects
                     
                 else
                     psycho_kernel{i,1}(:,t) = nan(2,1);
-                    psycho_kernel_ev{i,1}(:,t) = nan(3,1);
                     psycho_kernel_freq{i,1}(:,t) = nan(13,1);
                 end
             end
@@ -192,14 +200,15 @@ for m=1:n_subjects
         % Response time
         response_time{i,1} = nan(nTrials{i,1},1);
         for j=1:nTrials{i,1}
-            switch outcomeRecord{i,1}(1,j)
-                case 1
-                    response_time{i,1}(1,j) = rawEvents{i,1}{1,j}.States.Reward(1)-rawEvents{i,1}{1,j}.States.GoSignal(1);
-                case 0
-                    response_time{i,1}(1,j) = rawEvents{i,1}{1,j}.States.Punish(1)-rawEvents{i,1}{1,j}.States.GoSignal(1);
-                otherwise
-                    response_time{i,1}(1,j) = 0/0;
-            end
+%             switch outcomeRecord{i,1}(1,j)
+%                 case 1
+%                     response_time{i,1}(1,j) = rawEvents{i,1}{1,j}.States.Reward(1)-rawEvents{i,1}{1,j}.States.WaitForResponse(1);
+%                 case 0
+%                     response_time{i,1}(1,j) = rawEvents{i,1}{1,j}.States.Punish(1)-rawEvents{i,1}{1,j}.States.WaitForResponse(1);
+%                 otherwise
+%                     response_time{i,1}(1,j) = 0/0;
+%             end
+            response_time{i,1}(j,1) = rawEvents{i,1}{1,j}.States.DeliverStimulus(2)-rawEvents{i,1}{1,j}.States.DeliverStimulus(1);  
         end
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
@@ -234,7 +243,30 @@ for m=1:n_subjects
 
     end
 
-
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %% response time distribution
+    figure('Visible','Off')
+    set(gcf, 'PaperUnits', 'inches')
+    set(gcf, 'PaperSize',[10 10])
+    set(gcf, 'PaperPosition',[0 0 10 10])
+    for i=1:nSessions
+        subplot(floor(sqrt(nSessions)),ceil(nSessions/floor(sqrt(nSessions))),i)
+        hold on
+        [n x] = hist(response_time{i,1});
+        f=n;
+        bar(x,f,'barwidth',0.7,'edgecolor',[1 0.5 0],'facecolor',[0.9 0.4 0],'linewidth',1.5)  
+        set(gca,'FontSize',font_size)
+        if i==1
+            xlabel('Response time','FontSize',font_size)
+            ylabel('% Trials','FontSize',font_size)
+            title('rt_distribution')
+        end
+    end
+    print('-dpng', [result_path subject '_RTdistribution.png']);
+    print('-dpdf', [result_path subject '_RTdistribution.pdf']);
+    close
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %% psychometric
     figure('Visible','Off')
@@ -285,14 +317,11 @@ for m=1:n_subjects
             k=k+1;
             subplot(floor(sqrt(nSessions_psycho)),ceil(nSessions_psycho/floor(sqrt(nSessions_psycho))),k)
             hold on
-%            plot(psycho_kernel_bstp{i,1},'color',[0.7 0.7 0.7],'linewidth',0.5)
-            plot(psycho_kernel_bstp_ev{i,1},'color',[0.7 0.85 0.7],'linewidth',0.5)
+            plot(psycho_kernel_bstp{i,1},'color',[0.7 0.7 0.7],'linewidth',0.5)
             axis([1 sum(~isnan(psycho_kernel{i,1}(1,:))) -0.5 3])
             xlim = get(gca,'Xlim');
             ylim = get(gca,'Ylim');
             plot(psycho_kernel{i,1}(2,:),'color',[0.1 0.1 0.8],'linewidth',1.5)
-            plot(psycho_kernel_ev{i,1}(2,:)./psycho_kernel_ev{i,1}(3,:),'color',[0.25 0.5 0.0],'linewidth',1.5)
-            plot(psycho_kernel_ev{i,1}(3,:),'color',[0.5 0.25 0.0],'linewidth',1.5)            
             plot(xlim,[1 1]*psycho_logit{i,1}(2,:),'color',[0.75 0.5 0.25],'linewidth',0.5)
             if i==1
                 xlabel('Time','FontSize',font_size)
@@ -304,36 +333,6 @@ for m=1:n_subjects
     end
     print('-dpng', [result_path subject '_psychokernel.png']);
     print('-dpdf', [result_path subject '_psychokernel.pdf']);
-    close
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% mean psychophysical kernel
-    figure('Visible','Off')
-    hold on
-    set(gcf, 'PaperUnits', 'inches')
-    set(gcf, 'PaperSize', figure_size)
-    set(gcf, 'PaperPosition',[0 0 figure_size])
-    nSessions_psycho = sum(n_difficulties>=5);
-    k=0;
-    m = nan(nSessions_psycho,50);
-    for i=1:nSessions
-        if n_difficulties(i,1)>=5
-            k=k+1;
-            m(k,:) = psycho_kernel_ev{i,1}(2,:)./psycho_kernel_ev{i,1}(3,:);
-            m_bst(k,:) = mean(psycho_kernel_bstp_ev{i,1},1);
-        end
-    end
-    plot(nanmean(m,1),'-s','color',[0.25 0.5 0.0],'linewidth',1.5)
-    plot(m_bst,'color',[0.5 0.5 0.5],'linewidth',0.5)
-    axis([1 16 -1.5 1.5])
-    xlabel('# Tone','FontSize',font_size)
-    ylabel('\beta_2/\beta_1','FontSize',font_size)
-    title('Across-sessions mean PK');
-    set(gca,'FontSize',font_size)
-    print('-dpng', [result_path subject '_mean_psychokernel.png']);
-    print('-dpdf', [result_path subject '_mean_psychokernel.pdf']);
     close
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
