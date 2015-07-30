@@ -5,7 +5,7 @@
 % Modified by Peter Znamenskiy - 2009.02.18
 % Modified by F. Carnevale - 2015.02.19
 
-function [Amplitude] = find_amplitude(SoundParam,TargetSPL, SoundMachine,AnalogInputObj,BandLimits)
+function [Amplitude] = find_amplitude(SoundParam,TargetSPL,BandLimits)
     
     InitialAmplitude = 0.2;
     AcceptableDifference_dBSPL = 0.5;
@@ -16,7 +16,7 @@ function [Amplitude] = find_amplitude(SoundParam,TargetSPL, SoundMachine,AnalogI
 
     for inditer=1:MaxIterations
     
-        PowerAtThisFrequency = response_one_sound(SoundParam,SoundMachine,AnalogInputObj,BandLimits);
+        PowerAtThisFrequency = response_one_sound(SoundParam,BandLimits);
         PowerAtThisFrequency_dBSPL = 10*log10(PowerAtThisFrequency/SPLref^2);
         fprintf('Attentuation = %0.4f  ->  Power = %0.2f dB-SPL\n',SoundParam.Amplitude,PowerAtThisFrequency_dBSPL);
 

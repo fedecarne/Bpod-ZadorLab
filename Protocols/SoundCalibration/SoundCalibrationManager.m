@@ -187,10 +187,10 @@ MaxBandLimit = str2double(handles.MinBandLimit.String);
 FrequencyVector =  logspace(log10(MinFreq),log10(MaxFreq),nFreq);
 BandLimits = [MinBandLimit MaxBandLimit];
 
-%PsychToolboxSoundServer('init')
+PsychToolboxSoundServer('init')
 
 % --- Setup NI-card ---
-%initdaq; %% This script creates object AnalogInputObj
+usbdux_daq('init');
 
 %OPEN DIALOG BOX WHERE TO SAVE FILE
 OutputFileName = '/home/cnmc/Bpod_r0_5-master/Calibration Files/SoundCalibration';
@@ -223,7 +223,7 @@ for inds=1:nSpeakers            % --   Loop through speakers  --
             FAILURE=true;
             while FAILURE
                 try
-                    AttenuationVector(indf, inds, indType) = find_amplitude(Sound,TargetSPL,AnalogInputObj,BandLimits);
+                    AttenuationVector(indf, inds, indType) = find_amplitude(Sound,TargetSPL,BandLimits);
                     FAILURE=false;
                 catch ME
                     FAILURE=true;
