@@ -22,7 +22,7 @@ function varargout = SoundCalibrationManager(varargin)
 
 % Edit the above text to modify the response to help SoundCalibrationManager
 
-% Last Modified by GUIDE v2.5 19-Feb-2015 14:09:11
+% Last Modified by GUIDE v2.5 31-Jul-2015 18:16:16
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -182,7 +182,7 @@ nFreq = str2double(handles.nFreq.String);
 nSpeakers = str2double(handles.nSpeakers.String);
 
 MinBandLimit = str2double(handles.MinBandLimit.String);
-MaxBandLimit = str2double(handles.MinBandLimit.String);
+MaxBandLimit = str2double(handles.MaxBandLimit.String);
 
 FrequencyVector =  logspace(log10(MinFreq),log10(MaxFreq),nFreq);
 BandLimits = [MinBandLimit MaxBandLimit];
@@ -196,7 +196,7 @@ usbdux_daq('init');
 OutputFileName = '/home/cnmc/Bpod_r0_5-master/Calibration Files/SoundCalibration';
 [FileName,PathName] = uiputfile('.mat','Save Sound Calibration File',OutputFileName);
 
-AttenuationVector = zeros(nFreq,nSpeakers,1);
+AttenuationVector = zeros(nFreq,nSpeakers);
 
 wbar_handle = waitbar(0,'1','Name','Sound Calibration');
 
@@ -220,35 +220,10 @@ for inds=1:nSpeakers            % --   Loop through speakers  --
             Sound.Frequency = FrequencyVector(indf);
             BandLimits = Sound.Frequency * BandLimits;
             
-            FAILURE=true;
-            while FAILURE
-                try
-                    AttenuationVector(indf, inds, indType) = find_amplitude(Sound,TargetSPL,BandLimits);
-                    FAILURE=false;
-                catch ME
-                    FAILURE=true;
-                    disp('***** There was an error. This step will be repeated. *****');
-                end
-            end
-        end
-    else
-        
-        
-        Sound.Frequency = 0;
-        BandLimits = [min(FrequencyVector) max(FrequencyVector)];
-        
-        FAILURE=true;
-        while FAILURE
-            try
-                NoiseAmplitude(inds) = find_amplitude(Sound,TargetSPL,SoundMachine,AnalogInputObj,BandLimits);
-                FAILURE=false;
-            catch ME
-                FAILURE=true;
-                disp('***** There was an error. This step will be repeated. *****');
-            end
+            AttenuationVector(indf, inds) = find_amplitude(Sound,TargetSPL,BandLimits,handles);
+
         end
     end
-    toc
 end
 
 % Close psychotoolbox??
@@ -256,7 +231,7 @@ end
 % -- Saving results --
 save(fullfile(PathName,FileName),'FrequencyVector','AttenuationVector','TargetSPL','SoundParam','SoundTypeIndex','NoiseAmplitude');
 
-%msgbox({'The Sound Calibration file has been saved in: ', fullfile(PathName,FileName)});
+msgbox({'The Sound Calibration file has been saved in: ', fullfile(PathName,FileName)});
 
 plotResults = questdlg({'The Sound Calibration file has been saved in: ', fullfile(PathName,FileName)},'Sound Calibration', 'Ok', 'Plot Results','Ok');
 
@@ -439,3 +414,17 @@ function edit10_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in pause_btn.
+function pause_btn_Callback(hObject, eventdata, handles)
+% hObject    handle to pause_btn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton5.
+function pushbutton5_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

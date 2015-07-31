@@ -5,7 +5,7 @@
 % Modified by Peter Znamenskiy - 2009.02.18
 % Modified by F. Carnevale - 2015.02.19
 
-function [Amplitude] = find_amplitude(SoundParam,TargetSPL,BandLimits)
+function [Amplitude] = find_amplitude(SoundParam,TargetSPL,BandLimits, handles)
     
     InitialAmplitude = 0.2;
     AcceptableDifference_dBSPL = 0.5;
@@ -14,11 +14,19 @@ function [Amplitude] = find_amplitude(SoundParam,TargetSPL,BandLimits)
 
     SoundParam.Amplitude = InitialAmplitude;
 
+
     for inditer=1:MaxIterations
     
-        PowerAtThisFrequency = response_one_sound(SoundParam,BandLimits);
+        [PowerAtThisFrequency, signal_toplot] = response_one_sound(SoundParam,BandLimits);
         PowerAtThisFrequency_dBSPL = 10*log10(PowerAtThisFrequency/SPLref^2);
-        fprintf('Attentuation = %0.4f  ->  Power = %0.2f dB-SPL\n',SoundParam.Amplitude,PowerAtThisFrequency_dBSPL);
+        
+        axes(handles.signalFig);
+        plot(signal_toplot(1,:),signal_toplot(2,:));
+        axis square
+        
+        handles.freq_lbl.String = num2str(SoundParam.Frequency);
+        handles.attn_lbl.String = num2str(SoundParam.Amplitude);
+        handles.pwr_lbl.String = num2str(PowerAtThisFrequency_dBSPL);
 
         PowerDifference_dBSPL = PowerAtThisFrequency_dBSPL - TargetSPL;
         if(abs(PowerDifference_dBSPL)<AcceptableDifference_dBSPL)

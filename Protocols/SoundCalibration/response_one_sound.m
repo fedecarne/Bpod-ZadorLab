@@ -3,14 +3,12 @@
 %
 % Santiago Jaramillo - 2007.11.14
 % Uri  - 2013.05.27
-function [BandPower, SilencePower, Parameters, ThisPSD, RawSignal] = ...
-    response_one_sound(SoundParam,BandLimits)
+function [BandPower, signal_toplot, Parameters, ThisPSD] = response_one_sound(SoundParam,BandLimits)
 
 % --- Parameters of the test ---
-Parameters.ToneDuration = 0.8;         % sec
+Parameters.ToneDuration = 0.2;%0.8;         % sec
 Parameters.TimeToRecord = 0.500;        % sec
-%Parameters.FsOut = 200000;
-Parameters.FsOut = 80000;% Sampling frequency
+Parameters.FsOut = 200000;              % Sampling frequency
 tvec = 0:1/Parameters.FsOut:Parameters.ToneDuration;
 
 % --- Setting up PSD estimation ---
@@ -20,8 +18,8 @@ hPSD.SegmentLength=2048*8;
 % --- Set the acquisition card ---
 channel=3;
 n_chan = 16;   
-
-n_data = Parameters.ToneDuration/Parameters.FsOut;
+Parameters.FsIn = 80000;
+n_data = Parameters.TimeToRecord*Parameters.FsIn;
 
 % --- Creating and loading sounds ---
 switch SoundParam.Type{1,1}
@@ -81,49 +79,24 @@ if SoundParam.Speaker==2
     SoundVec = [ zeros(1,length(SoundVec)); SoundVec ];
 end
 
-SoundID = 1;
-fprintf('Loading sound (A=%f , F=%0.0f Hz)...\n',SoundParam.Amplitude,SoundParam.Frequency);
-PsychToolboxSoundServer('Load', 1, SoundVec);;
-
-SilenceVec = zeros(1,length(SoundVec));
-SilenceID = 2;
-fprintf('Loading sound (A=0 , F=%0.0f Hz)...\n',SoundParam.Frequency);
-PsychToolboxSoundServer('Load', 2, SilenceVec);
+% Load sound
+PsychToolboxSoundServer('Load', 1, SoundVec);
 
 % --- Play the sound ---
-fprintf(' Playing and recording sound...\n');
-SoundMachine = PlaySound(SoundMachine, SoundID);
-pause(0.1);
-
-
-start(AnalogInputObj);
-pause(Parameters.TimeToRecord+0.1);
-
-%[RawSignal.Data,RawSignal.TimeVec]=getdata(AnalogInputObj,AnalogInputObj.SamplesAvailable);
-data = usbdux_daq('acquire','physical',1,'n_scan',n_data,'freq',Parameters.FsOut,'n_chan',n_chan);
+PsychToolboxSoundServer('Play', 1);
+data = usbdux_daq('acquire','physical',1,'n_scan',n_data,'freq',Parameters.FsIn,'n_chan',n_chan,'voltage_divider_factor',1050/50);  % voltage divider factor is the resistance across we measure divided by the total resistance
 RawSignal = data(channel,:); 
 
-SoundMachine=StopSound(SoundMachine);
+pause(Parameters.ToneDuration);
+
+signal_toplot = [0:1/Parameters.FsIn:(size(RawSignal,2)-1)/Parameters.FsIn; RawSignal];
+
+PsychToolboxSoundServer('StopAll');
 
 % --- Calculate power ---
 ThisPSD = psd(hPSD,RawSignal,'Fs',Parameters.FsIn);
 BandPower = band_power(ThisPSD.Data,ThisPSD.Frequencies,BandLimits);
 
-% --- Record silence ---
-SoundMachine = PlaySound(SoundMachine, SilenceID);
-start(AnalogInputObj);
-pause(Parameters.TimeToRecord+0.1);
-
-%[RawSignal.Data,RawSignal.TimeVec]=getdata(AnalogInputObj,AnalogInputObj.SamplesAvailable);
-data = usbdux_daq('acquire','physical',1,'n_scan',n_data,'freq',Parameters.FsOut,'n_chan',n_chan);
-RawSignal = data(channel,:); 
-
-SoundMachine=StopSound(SoundMachine);
-
-% --- Calculate silence power ---
-ThisPSD = psd(hPSD,RawSignal.Data,'Fs',Parameters.FsIn);
-SilencePower = band_power(ThisPSD.Data, ThisPSD.Frequencies, BandLimits);
-fprintf(' Done!\n');
 
 function StimuliVec=SqCosBeeper(RR,SR,Freq,BeepDuration,CosRamp,MaxToneDuration)
 
