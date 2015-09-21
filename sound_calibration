@@ -1,0 +1,27 @@
+sudo apt-get install build-essential
+
+sudo apt-get install libudev-dev libusb-1.0-0-dev libfox-1.6-dev
+
+
+
+git clone git://github.com/signal11/hidapi.git
+
+sudo apt-get install autotools-dev autoconf automake libtool
+cd hidapi
+sudo ./bootstrap
+sudo ./configure
+sudo make
+sudomake install
+
+
+sudo cp 61-mcc.rules /etc/udev/rules.d
+
+sudo /sbin/udevadm control --reload-rules
+
+Download MCCLIBUSB from ftp://lx10.tx.ncsu.edu/pub/Linux/drivers/USB/
+
+tar zxvf  MCCLIBUSB.1.2.tgz
+cd mcc-libusb
+sudo make
+sudo make install
+sudo ldconfig
