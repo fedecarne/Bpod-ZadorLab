@@ -17,6 +17,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     
     % Stimulus section
     S.GUI.UseMiddleOctave.panel = 'Stimulus settings'; S.GUI.UseMiddleOctave.style = 'popupmenu'; S.GUI.UseMiddleOctave.string = {'no', 'yes'}; S.GUI.UseMiddleOctave.value = 1;% Training stage
+    S.GUI.VolumeMin.panel = 'Stimulus settings'; S.GUI.VolumeMin.style = 'edit'; S.GUI.VolumeMin.string = 50; % Lowest volume dB
+    S.GUI.VolumeMax.panel = 'Stimulus settings'; S.GUI.VolumeMax.style = 'edit'; S.GUI.VolumeMax.string = 70; % Highest Volume dB
     S.GUI.DifficultyLow.panel = 'Stimulus settings'; S.GUI.DifficultyLow.style = 'edit'; S.GUI.DifficultyLow.string = 1; % Lowest difficulty
     S.GUI.DifficultyHigh.panel = 'Stimulus settings'; S.GUI.DifficultyHigh.style = 'edit'; S.GUI.DifficultyHigh.string = 1; % Highest difficulty
     S.GUI.nDifficulties.panel = 'Stimulus settings'; S.GUI.nDifficulties.style = 'edit'; S.GUI.nDifficulties.string = 0; % Highest difficulty
@@ -68,8 +70,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     StimulusSettings.UseMiddleOctave = S.GUI.UseMiddleOctave.string(S.GUI.UseMiddleOctave.value);
     StimulusSettings.Noevidence = S.GUI.NoEvidence.string;   
     StimulusSettings.nFreq = 18; % Number of different frequencies to sample from
-    StimulusSettings.ramp = 0.005;    
-    
+    StimulusSettings.ramp = 0.005;     
 end
 
 %% Define trials
@@ -144,7 +145,6 @@ BpodSystem.ProtocolFigures.BpodParameterGUI.Position = [66 1 BpodSystem.Protocol
 BpodSystem.ProtocolFigures.PerformancePlotFig.Position = [705 533 BpodSystem.ProtocolFigures.PerformancePlotFig.Position(3:4)];
 BpodSystem.ProtocolFigures.OutcomePlotFig.Position = [705 832 BpodSystem.ProtocolFigures.OutcomePlotFig.Position(3:4)];
 BpodSystem.ProtocolFigures.PsychoPlotFig.Position = [1196 193 BpodSystem.ProtocolFigures.PsychoPlotFig.Position(3:4)];
-
 
 %% Define stimuli and send to sound server
 
@@ -296,6 +296,10 @@ for currentTrial = 1:MaxTrials
     StimulusSettings.maxFreq = maxFreq;
     StimulusSettings.UseMiddleOctave = S.GUI.UseMiddleOctave.string(S.GUI.UseMiddleOctave.value);
     StimulusSettings.Noevidence = S.GUI.NoEvidence.string;   
+    StimulusSettings.VolumeMin = S.GUI.VolumeMin.string;
+    StimulusSettings.VolumeMax = S.GUI.VolumeMax.string;
+    
+    StimulusSettings.Volume = (randi(10)-1)/4*(StimulusSettings.VolumeMax-StimulusSettings.VolumeMin) + StimulusSettings.VolumeMin;
     
     if S.GUI.Antibias.value==2 %apply antibias
         if Outcomes(currentTrial-1)==0

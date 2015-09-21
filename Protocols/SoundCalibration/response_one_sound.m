@@ -3,11 +3,13 @@
 %
 % Santiago Jaramillo - 2007.11.14
 % Uri  - 2013.05.27
+% Fede - 2015.09.10
+
 function [BandPower, signal_toplot, Parameters, ThisPSD] = response_one_sound(SoundParam,BandLimits)
 
 % --- Parameters of the test ---
-Parameters.ToneDuration = 0.2;%0.8;         % sec
-Parameters.TimeToRecord = 0.500;        % sec
+Parameters.ToneDuration = 1;%0.8;         % sec
+Parameters.TimeToRecord = 0.3;        % sec
 Parameters.FsOut = 200000;              % Sampling frequency
 tvec = 0:1/Parameters.FsOut:Parameters.ToneDuration;
 
@@ -16,9 +18,10 @@ hPSD = spectrum.welch;
 hPSD.SegmentLength=2048*8;
 
 % --- Set the acquisition card ---
-channel=3;
-n_chan = 16;   
-Parameters.FsIn = 80000;
+channel = 1;
+n_chan = 1; 
+
+Parameters.FsIn = 100000;
 n_data = Parameters.TimeToRecord*Parameters.FsIn;
 
 % --- Creating and loading sounds ---
@@ -84,7 +87,12 @@ PsychToolboxSoundServer('Load', 1, SoundVec);
 
 % --- Play the sound ---
 PsychToolboxSoundServer('Play', 1);
-data = usbdux_daq('acquire','physical',1,'n_scan',n_data,'freq',Parameters.FsIn,'n_chan',n_chan,'voltage_divider_factor',1050/50);  % voltage divider factor is the resistance across we measure divided by the total resistance
+
+pause(0.2);
+
+cd('~/Bpod-ZadorLab/Protocols/SoundCalibration');
+data = mcc_daq('n_scan',n_data,'freq',Parameters.FsIn,'n_chan',n_chan);
+
 RawSignal = data(channel,:); 
 
 pause(Parameters.ToneDuration);

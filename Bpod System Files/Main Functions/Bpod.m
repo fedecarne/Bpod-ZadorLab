@@ -65,6 +65,8 @@ catch
         mkdir([BpodSystem.BpodPath,'/' 'Calibration Files']);
         BpodSystem.CalibrationTables.LiquidCal = [];
     else
+        
+        %Liquid
         try
         LiquidCalibrationFilePath = fullfile(BpodSystem.BpodPath, 'Calibration Files', 'LiquidCalibration.mat');
         load(LiquidCalibrationFilePath);
@@ -72,8 +74,17 @@ catch
         catch
           BpodSystem.CalibrationTables.LiquidCal = [];  
         end
+        
+        % Sound
+        try
+        SoundCalibrationFilePath = fullfile(BpodSystem.BpodPath, 'Calibration Files', 'SoundCalibration.mat');
+        load(SoundCalibrationFilePath);
+        BpodSystem.CalibrationTables.SoundCal = SoundCal;
+        catch
+          BpodSystem.CalibrationTables.SoundCal = [];  
+        end
     end
-    
+        
     % Load input channel settings
     BpodSystem.InputConfigPath = fullfile(BpodSystem.BpodPath, 'Settings Files', 'BpodInputConfig.mat');
     load(BpodSystem.InputConfigPath);

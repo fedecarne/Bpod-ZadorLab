@@ -13,16 +13,33 @@ function [Amplitude] = find_amplitude(SoundParam,TargetSPL,BandLimits, handles)
     SPLref = 20e-6;                         % Pa
 
     SoundParam.Amplitude = InitialAmplitude;
-
+    
+    axes(handles.signalFig);
 
     for inditer=1:MaxIterations
     
         [PowerAtThisFrequency, signal_toplot] = response_one_sound(SoundParam,BandLimits);
         PowerAtThisFrequency_dBSPL = 10*log10(PowerAtThisFrequency/SPLref^2);
         
-        axes(handles.signalFig);
-        plot(signal_toplot(1,:),signal_toplot(2,:));
-        axis square
+        % plot spectrum of recorded sound
+        Fs = 100000; % Sampling frequency
+        L = size(signal_toplot,2); % Length of signal
+       
+        X = signal_toplot(2,:);
+        Y = fft(X);
+
+        P2 = abs(Y/L);
+        P1 = P2(1:L/2+1);
+        P1(2:end-1) = 2*P1(2:end-1);
+
+        f = Fs*(0:(L/2))/L;
+    
+        plot(f/1000,P1)
+        semilogx(f/1000,P1);
+        axis([0.01 100 0 0.1])
+        New_XTickLabel = get(gca,'xtick');
+        set(gca,'XTickLabel',New_XTickLabel);
+                
         
         handles.freq_lbl.String = num2str(SoundParam.Frequency);
         handles.attn_lbl.String = num2str(SoundParam.Amplitude);

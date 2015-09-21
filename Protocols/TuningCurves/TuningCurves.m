@@ -34,20 +34,6 @@ end
 % Initialize parameter GUI plugin
 EnhancedBpodParameterGUI('init', S);
 
-%% Define trials
-
-%PossibleFreqs = logspace(S.GUI.LowFreq.string,S.GUI.HighFreq.string,S.GUI.nFreq.string);
-PossibleFreqs = logspace(log10(S.GUI.LowFreq.string),log10(S.GUI.HighFreq.string),S.GUI.nFreq.string);
-
-MaxTrials = size(PossibleFreqs,2)*S.GUI.nSounds.string;
-
-TrialFreq = PossibleFreqs(randi(size(PossibleFreqs,2),1,MaxTrials));
-ToneOffset = nan(1,MaxTrials); % ToneOffset for each trial
-PreSound = nan(1,MaxTrials); % PreSound interval for each trial
-InterTrial = nan(1,MaxTrials); % Intertrial interval for each trial
-SoundDuration = nan(1,MaxTrials); % Sound duration for each trial
-
-
 BpodSystem.Data.TrialFreq = []; % The trial frequency of each trial completed will be added here.
 
 % Notebook
@@ -62,6 +48,18 @@ BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler_PlaySound';
 BpodSystem.ProtocolFigures.InitialMsg = msgbox({'', ' Edit your settings and click OK when you are ready to start!     ', ''},'Tuning Curves Protocol...');
 uiwait(BpodSystem.ProtocolFigures.InitialMsg);
 
+S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
+
+%% Define trials
+PossibleFreqs = logspace(log10(S.GUI.LowFreq.string),log10(S.GUI.HighFreq.string),S.GUI.nFreq.string);
+
+MaxTrials = size(PossibleFreqs,2)*S.GUI.nSounds.string;
+
+TrialFreq = PossibleFreqs(randi(size(PossibleFreqs,2),1,MaxTrials));
+ToneOffset = nan(1,MaxTrials); % ToneOffset for each trial
+PreSound = nan(1,MaxTrials); % PreSound interval for each trial
+InterTrial = nan(1,MaxTrials); % Intertrial interval for each trial
+SoundDuration = nan(1,MaxTrials); % Sound duration for each trial
 
 S.GUI.SoundFreq.string = round(TrialFreq(1)); % Sound Volume
 S.GUI.TrialNumber.string = 1; % Number of current trial

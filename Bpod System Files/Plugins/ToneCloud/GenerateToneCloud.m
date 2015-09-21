@@ -11,6 +11,8 @@ error handling
 
 %r is as defined by PZ (0 to 1), 0 meaning that the probability of target and non target freq is the same
 
+global BpodSystem
+
 nTones = StimSettings.nTones;
 ToneOverlap = StimSettings.ToneOverlap;
 ToneDuration = StimSettings.ToneDuration;
@@ -19,10 +21,20 @@ maxFreq = StimSettings.maxFreq;
 SamplingRate = StimSettings.SamplingRate;
 UseMiddleOctave = StimSettings.UseMiddleOctave;
 nTones_noEvidence = StimSettings.Noevidence;
+Volume = StimSettings.Volume;
  
 nFreq = StimSettings.nFreq; % Number of different frequencies to sample from
 toneFreq = logspace(log10(minFreq),log10(maxFreq),nFreq); % Nfreq logly distributed
-toneAtt = [ones(1,nFreq)' ones(1,nFreq)']; % This will be used to attenuate (not in use yet)
+SoundCal = BpodSystem.CalibrationTables.SoundCal;
+%att = [ones(1,nFreq)' ones(1,nFreq)']; % This will be used to attenuate (not in use yet)
+toneAtt = [polyval(SoundCal(1,1).Coefficient,toneFreq)' polyval(SoundCal(1,2).Coefficient,toneFreq)'];
+
+diffSPL = Volume - [SoundCal(1,1).TargetSPL SoundCal(1,2).TargetSPL];
+attFactor = sqrt(10.^(diffSPL./10));
+
+att = toneAtt.*repmat(attFactor,nFreq,1);
+
+
 nTones_Evidence = nTones - nTones_noEvidence; % Number of tones with controlled evidence
 ramp = StimSettings.ramp; % Fraction of tone duration that is used for the envelope
 
@@ -39,7 +51,7 @@ switch true
 
         nTarget = round(nTones_Evidence*(1/3+2/3*r)); % Number of tones with target frequencies
 
-        boundy = [nFreq/3 2/3*nFreq]; % debugging purposes
+        %boundy = [nFreq/3 2/3*nFreq]; % debugging purposes
         
         switch true
             case strcmp(rewarded,'low')
@@ -61,7 +73,7 @@ switch true
         
         nTarget = round(nTones_Evidence*(1/2+r/2)); % Number of tones with target frequencies
                 
-        boundy = [nFreq/3 2/3*nFreq]; % debugging purposes
+        %boundy = [nFreq/3 2/3*nFreq]; % debugging purposes
         
         switch true
             case strcmp(rewarded,'low')
@@ -80,7 +92,7 @@ end
 
 cloud = [noEvidence_ind Evidence_ind]; % Coomplete stream of tones
 freqs = toneFreq(cloud); % Frequencies
-Amps = toneAtt(cloud,:); % Tone amplitudes
+Amps = att(cloud,:); % Tone amplitudes
 toneVec = 1/SamplingRate:1/SamplingRate:ToneDuration; % Here go the tones
 
 omega=(acos(sqrt(0.1))-acos(sqrt(0.9)))/ramp; % This is for the envelope
