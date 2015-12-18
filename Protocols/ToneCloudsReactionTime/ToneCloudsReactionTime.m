@@ -1,5 +1,5 @@
 
-function ToneClouds4BPod
+function ToneCloudsReactionTime
 
 % This protocol implements ToneClouds (developed by P. Znamenskiy) on Bpod
 % Based on PsychoToolboxSound (written by J.Sanders)

@@ -10,24 +10,36 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with settings default
     
     S.GUI.SoundType.panel = 'Sound Settings'; S.GUI.SoundType.style = 'popupmenu'; S.GUI.SoundType.string = {'Tone', 'Chord','FM','Noise','FastBips'}; S.GUI.SoundType.value = 1;
-    S.GUI.LowFreq.panel = 'Sound Settings'; S.GUI.LowFreq.style = 'edit'; S.GUI.LowFreq.string = 200; % Lowest frequency
-    S.GUI.HighFreq.panel = 'Sound Settings'; S.GUI.HighFreq.style = 'edit'; S.GUI.HighFreq.string = 1000; % Highest frequency
-    S.GUI.nFreq.panel = 'Sound Settings'; S.GUI.nFreq.style = 'edit'; S.GUI.nFreq.string = 20; % Number of frequencies    
-    S.GUI.Ramp.panel = 'Sound Settings'; S.GUI.Ramp.style = 'edit'; S.GUI.Ramp.string = 0.005;
-    S.GUI.SoundVolume.panel = 'Sound Settings'; S.GUI.SoundVolume.style = 'edit'; S.GUI.SoundVolume.string = 70; % Sound Volume
-
-    S.GUI.InterTrial.panel = 'Timing Settings'; S.GUI.InterTrial.style = 'edit'; S.GUI.InterTrial.string = 1; % Intertrial Interval
-    S.GUI.PreSound.panel = 'Timing Settings'; S.GUI.PreSound.style = 'edit'; S.GUI.PreSound.string = 1; % PreSound Interval
-    S.GUI.ToneOffset.panel = 'Timing Settings'; S.GUI.ToneOffset.style = 'edit'; S.GUI.ToneOffset.string = 0.2; % Tone offset
-    S.GUI.SoundDuration.panel = 'Timing Settings'; S.GUI.SoundDuration.style = 'edit'; S.GUI.SoundDuration.string = 1; % Sound Duration
-    S.GUI.nSounds.panel = 'Timing Settings'; S.GUI.nSounds.style = 'edit'; S.GUI.nSounds.string = 10;
     
-    S.GUI.SoundFreq.panel = 'Current Trial'; S.GUI.SoundFreq.style = 'text'; S.GUI.SoundFreq.string = 0; % Sound Volume
+    S.GUI.LowFreq.panel = 'Sound Settings'; S.GUI.LowFreq.style = 'edit'; S.GUI.LowFreq.string = 4000; % Lowest frequency
+    S.GUI.HighFreq.panel = 'Sound Settings'; S.GUI.HighFreq.style = 'edit'; S.GUI.HighFreq.string = 40000; % Highest frequency
+    S.GUI.nFreq.panel = 'Sound Settings'; S.GUI.nFreq.style = 'edit'; S.GUI.nFreq.string = 20; % Number of frequencies    
+
+    S.GUI.SoundVolumeMin.panel = 'Sound Settings'; S.GUI.SoundVolumeMin.style = 'edit'; S.GUI.SoundVolumeMin.string = 55; % Sound Volume    
+    S.GUI.SoundVolumeMax.panel = 'Sound Settings'; S.GUI.SoundVolumeMax.style = 'edit'; S.GUI.SoundVolumeMax.string = 55; % Sound Volume
+    S.GUI.nVolumes.panel = 'Sound Settings'; S.GUI.nVolumes.style = 'edit'; S.GUI.nVolumes.string = 1; % Number of sound volumes
+    
+    S.GUI.InterTrial.panel = 'Timing Settings'; S.GUI.InterTrial.style = 'edit'; S.GUI.InterTrial.string = 0.5; % Intertrial Interval
+    S.GUI.PreSoundMin.panel = 'Timing Settings'; S.GUI.PreSoundMin.style = 'edit'; S.GUI.PreSoundMin.string = 0.5; % PreSound Interval
+    S.GUI.PreSoundWidth.panel = 'Timing Settings'; S.GUI.PreSoundWidth.style = 'edit'; S.GUI.PreSoundWidth.string = 0.25; % PreSound Interval
+    S.GUI.SoundDuration.panel = 'Timing Settings'; S.GUI.SoundDuration.style = 'edit'; S.GUI.SoundDuration.string = 0.25; % Sound Duration
+    S.GUI.nSounds.panel = 'Timing Settings'; S.GUI.nSounds.style = 'edit'; S.GUI.nSounds.string = 20;
+    
+    S.GUI.SoundFreq.panel = 'Current Trial'; S.GUI.SoundFreq.style = 'text'; S.GUI.SoundFreq.string = 0; % Sound Frequency
+    S.GUI.SoundVolume.panel = 'Current Trial'; S.GUI.SoundVolume.style = 'text'; S.GUI.SoundVolume.string = 0; % Sound Volume
     S.GUI.TrialNumber.panel = 'Current Trial'; S.GUI.TrialNumber.style = 'text'; S.GUI.TrialNumber.string = 0; % Number of current trial
-    S.GUI.TotalTrials.panel = 'Current Trial'; S.GUI.TotalTrials.style = 'text'; S.GUI.TotalTrials.string = 0; % Total number of trials
+
+    S.GUI.BregmaAP.panel = 'Coordinates'; S.GUI.BregmaAP.style = 'edit'; S.GUI.BregmaAP.string = 0; %
+    S.GUI.BregmaDM.panel = 'Coordinates'; S.GUI.BregmaDM.style = 'edit'; S.GUI.BregmaDM.string = 0; %
+    S.GUI.SurfaceDepth.panel = 'Coordinates'; S.GUI.SurfaceDepth.style = 'edit'; S.GUI.SurfaceDepth.string = 0; %
+    
+    S.GUI.ElectrodeAP.panel = 'Coordinates'; S.GUI.ElectrodeAP.style = 'edit'; S.GUI.ElectrodeAP.string = 0; %
+    S.GUI.ElectrodeDM.panel = 'Coordinates'; S.GUI.ElectrodeDM.style = 'edit'; S.GUI.ElectrodeDM.string = 0; %
+    S.GUI.ElectrodeDepth.panel = 'Coordinates'; S.GUI.ElectrodeDepth.style = 'edit'; S.GUI.ElectrodeDepth.string = 0; %
     
     % Other Stimulus settings (not in the GUI)
     StimulusSettings.SamplingRate = 192000; % Sound card sampling rate;
+    StimulusSettings.Ramp = 0.005; 
     
 end
 
@@ -52,34 +64,35 @@ S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodPara
 
 %% Define trials
 PossibleFreqs = logspace(log10(S.GUI.LowFreq.string),log10(S.GUI.HighFreq.string),S.GUI.nFreq.string);
+PossibleVolumes = linspace(S.GUI.SoundVolumeMin.string,S.GUI.SoundVolumeMax.string,S.GUI.nVolumes.string);
 
 MaxTrials = size(PossibleFreqs,2)*S.GUI.nSounds.string;
 
 TrialFreq = PossibleFreqs(randi(size(PossibleFreqs,2),1,MaxTrials));
-ToneOffset = nan(1,MaxTrials); % ToneOffset for each trial
+TrialVol = PossibleVolumes(randi(size(PossibleVolumes,2),1,MaxTrials));
+
 PreSound = nan(1,MaxTrials); % PreSound interval for each trial
 InterTrial = nan(1,MaxTrials); % Intertrial interval for each trial
 SoundDuration = nan(1,MaxTrials); % Sound duration for each trial
 
-S.GUI.SoundFreq.string = round(TrialFreq(1)); % Sound Volume
-S.GUI.TrialNumber.string = 1; % Number of current trial
-S.GUI.TotalTrials.string = MaxTrials; % Total number of trials
+S.GUI.SoundFreq.string = round(TrialFreq(1)); % Sound Freq
+S.GUI.SoundVolume.string = round(TrialVol(1)); % Sound Freq
+S.GUI.TrialNumber.string = [num2str(1) '/' num2str(MaxTrials)]; % Number of current trial
 
 %% Main trial loop
 for currentTrial = 1:MaxTrials
     
     S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
     
-    ToneOffset(currentTrial) = S.GUI.ToneOffset.string;
     InterTrial(currentTrial) = S.GUI.InterTrial.string;
-    PreSound(currentTrial) = S.GUI.PreSound.string;
+    PreSound(currentTrial) = S.GUI.PreSoundMin.string+S.GUI.PreSoundWidth.string*rand;
     SoundDuration(currentTrial) = S.GUI.SoundDuration.string;
 
     % Update stimulus settings    
-    StimulusSettings.SoundVolume = S.GUI.SoundVolume.string;
+    StimulusSettings.SoundVolume = TrialVol(currentTrial);
     StimulusSettings.SoundDuration = S.GUI.SoundDuration.string;
     StimulusSettings.Freq = TrialFreq(currentTrial);
-    StimulusSettings.Ramp = S.GUI.Ramp.string;
+    StimulusSettings.Ramp =     StimulusSettings.Ramp;
     
     % This stage sound generation
     Sound = GenerateSound(StimulusSettings);
@@ -93,10 +106,6 @@ for currentTrial = 1:MaxTrials
         'OutputActions', {});
     sma = AddState(sma, 'Name', 'TrigStart', ...
         'Timer', 0.01,...
-        'StateChangeConditions', {'Tup', 'ToneOffset'},...
-        'OutputActions', {}); %DOUT
-    sma = AddState(sma, 'Name', 'ToneOffset', ...
-        'Timer', ToneOffset(currentTrial),...
         'StateChangeConditions', {'Tup', 'DeliverStimulus'},...
         'OutputActions', {});
     sma = AddState(sma, 'Name', 'DeliverStimulus', ...
@@ -117,7 +126,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialFreq(currentTrial) = TrialFreq(currentTrial);
-        BpodSystem.Data.PrestimDuration(currentTrial) = ToneOffset(currentTrial);
+        BpodSystem.Data.TrialVol(currentTrial) = TrialVol(currentTrial);
         BpodSystem.Data.SoundDuration(currentTrial) = SoundDuration(currentTrial);
         BpodSystem.Data.InterTrial(currentTrial) = InterTrial(currentTrial);
         BpodSystem.Data.PreSound(currentTrial) = PreSound(currentTrial);
@@ -131,9 +140,9 @@ for currentTrial = 1:MaxTrials
             TrialFreq(currentTrial+1:end) = PossibleFreqs(randi(size(PossibleFreqs,2),1,MaxTrials-currentTrial));
             
             % display next trial info
-            S.GUI.SoundFreq.string = round(TrialFreq(currentTrial+1)); % Sound Volume
-            S.GUI.TrialNumber.string = currentTrial+1; % Number of current trial
-            S.GUI.TotalTrials.string = MaxTrials; % Total number of trials
+            S.GUI.SoundFreq.string = round(TrialFreq(currentTrial+1)); % Sound Frequency
+            S.GUI.SoundVolume.string = round(TrialVol(currentTrial+1)); % Sound Volume
+            S.GUI.TrialNumber.string = [num2str(currentTrial+1) '/' num2str(MaxTrials)]; % Number of current trial
         end
         
     end
