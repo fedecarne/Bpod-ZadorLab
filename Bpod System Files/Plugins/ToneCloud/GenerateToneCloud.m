@@ -19,21 +19,18 @@ ToneDuration = StimSettings.ToneDuration;
 minFreq = StimSettings.minFreq;
 maxFreq = StimSettings.maxFreq;
 SamplingRate = StimSettings.SamplingRate;
-UseMiddleOctave = StimSettings.UseMiddleOctave;
 nTones_noEvidence = StimSettings.Noevidence;
 Volume = StimSettings.Volume;
  
 nFreq = StimSettings.nFreq; % Number of different frequencies to sample from
 toneFreq = logspace(log10(minFreq),log10(maxFreq),nFreq); % Nfreq logly distributed
 SoundCal = BpodSystem.CalibrationTables.SoundCal;
-%att = [ones(1,nFreq)' ones(1,nFreq)']; % This will be used to attenuate (not in use yet)
 toneAtt = [polyval(SoundCal(1,1).Coefficient,toneFreq)' polyval(SoundCal(1,2).Coefficient,toneFreq)'];
 
 diffSPL = Volume - [SoundCal(1,1).TargetSPL SoundCal(1,2).TargetSPL];
 attFactor = sqrt(10.^(diffSPL./10));
 
 att = toneAtt.*repmat(attFactor,nFreq,1);
-
 
 nTones_Evidence = nTones - nTones_noEvidence; % Number of tones with controlled evidence
 ramp = StimSettings.ramp; % Fraction of tone duration that is used for the envelope
@@ -42,55 +39,49 @@ seed = 1;
 % if ~isnan(seed) 
 %     rand('twister',seed);
 % end
+        
+noEvidence_ind = randi(nFreq,1,nTones_noEvidence); % Frequency indices of no evidence tones
+
+pTarget = (1/2+r/2);
+%boundy = [nFreq/3 2/3*nFreq]; % debugging purposes
+
 
 switch true
+    case strcmp(rewarded,'low')
 
-    case strcmp(UseMiddleOctave, 'yes')
-
-        noEvidence_ind = randi(nFreq,1,nTones_noEvidence); % Frequency indices of no evidence tones
-
-        nTarget = round(nTones_Evidence*(1/3+2/3*r)); % Number of tones with target frequencies
-
-        %boundy = [nFreq/3 2/3*nFreq]; % debugging purposes
+        Evidence_ind = randi(nFreq/3,1,nTones_Evidence)+nFreq*2/3; % Fill everything with nontarget (high)
         
-        switch true
-            case strcmp(rewarded,'low')
-                
-                Evidence_ind = randi(2/3*nFreq,1,nTones_Evidence)+nFreq/3; % Fill everything with nontarget (high+middle)
-                ind_replace = randperm(nTones_Evidence); % Indices to replace with target frequencies
-                Evidence_ind(ind_replace(1:nTarget))=randi(nFreq/3,1,nTarget); % Replace with target freqs (low)
-
-            case strcmp(rewarded,'high')
-
-                Evidence_ind = randi(2/3*nFreq,1,nTones_Evidence); % Fill everything with nontarget (low+middle)
-                ind_replace = randperm(nTones_Evidence); % Indices to replace with target frequencies
-                Evidence_ind(ind_replace(1:nTarget))=randi(nFreq/3,1,nTarget)+2/3*nFreq; % Replace with target freqs (high)
-        end
-
-    case strcmp(UseMiddleOctave, 'no')
+        %this gives exactly the number of tones according to the pTarget
+        %nTarget = round(nTones_Evidence*pTarget); % Number of tones with target frequencies
+        %ind_replace = randperm(nTones_Evidence); % Indices to replace with target frequencies
+        %Evidence_ind(ind_replace(1:nTarget))=randi(nFreq/3,1,nTarget); % Replace with target freqs (low)
         
-        noEvidence_ind = randi(nFreq,1,nTones_noEvidence); % Frequency indices of no evidence tones
+        %this draws a independent random numbers for each slot
+        %note that the amount of slots with target freq will vary from
+        %trial to trial, even when the same pTarget
+        ind_replace = find(rand(1,nTones_Evidence)<pTarget);
+        nTarget = size(ind_replace,2); % Number of tones with target frequencies
+        Evidence_ind(ind_replace)=randi(nFreq/3,1,nTarget); % Replace with target freqs (low)
         
-        nTarget = round(nTones_Evidence*(1/2+r/2)); % Number of tones with target frequencies
-                
-        %boundy = [nFreq/3 2/3*nFreq]; % debugging purposes
+
+    case strcmp(rewarded,'high')
+
+        Evidence_ind = randi(nFreq/3,1,nTones_Evidence); % Fill everything with nontarget (low)
         
-        switch true
-            case strcmp(rewarded,'low')
-                
-                Evidence_ind = randi(nFreq/3,1,nTones_Evidence)+nFreq*2/3; % Fill everything with nontarget (high)
-                ind_replace = randperm(nTones_Evidence); % Indices to replace with target frequencies
-                Evidence_ind(ind_replace(1:nTarget))=randi(nFreq/3,1,nTarget); % Replace with target freqs (low)
-                
-            case strcmp(rewarded,'high')
-                
-                Evidence_ind = randi(nFreq/3,1,nTones_Evidence); % Fill everything with nontarget (low)
-                ind_replace = randperm(nTones_Evidence); % Indices to replace with target frequencies
-                Evidence_ind(ind_replace(1:nTarget))=randi(nFreq/3,1,nTarget)+2/3*nFreq; % Replace with target freqs (high)
-        end
+        %this gives exactly the number of tones according to the pTarget
+        %nTarget = round(nTones_Evidence*pTarget); % Number of tones with target frequencies
+        %ind_replace = randperm(nTones_Evidence); % Indices to replace with target frequencies
+        %Evidence_ind(ind_replace(1:nTarget))=randi(nFreq/3,1,nTarget)+2/3*nFreq; % Replace with target freqs (high)
+        
+        %this draws a independent random numbers for each slot
+        %note that the amount of slots with target freq will vary from
+        %trial to trial, even when the same pTarget
+        ind_replace = find(rand(1,nTones_Evidence)<pTarget);
+        nTarget = size(ind_replace,2); % Number of tones with target frequencies
+        Evidence_ind(ind_replace)=randi(nFreq/3,1,nTarget)+2/3*nFreq; % Replace with target freqs (high)
 end
 
-cloud = [noEvidence_ind Evidence_ind]; % Coomplete stream of tones
+cloud = [noEvidence_ind Evidence_ind]; % Complete stream of tones
 freqs = toneFreq(cloud); % Frequencies
 Amps = att(cloud,:); % Tone amplitudes
 toneVec = 1/SamplingRate:1/SamplingRate:ToneDuration; % Here go the tones

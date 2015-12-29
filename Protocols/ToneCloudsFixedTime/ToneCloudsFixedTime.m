@@ -16,16 +16,15 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 1;% Training stage
     
     % Stimulus section
-    S.GUI.UseMiddleOctave.panel = 'Stimulus settings'; S.GUI.UseMiddleOctave.style = 'popupmenu'; S.GUI.UseMiddleOctave.string = {'no', 'yes'}; S.GUI.UseMiddleOctave.value = 1;% Training stage
     S.GUI.VolumeMin.panel = 'Stimulus settings'; S.GUI.VolumeMin.style = 'edit'; S.GUI.VolumeMin.string = 50; % Lowest volume dB
-    S.GUI.VolumeMax.panel = 'Stimulus settings'; S.GUI.VolumeMax.style = 'edit'; S.GUI.VolumeMax.string = 70; % Highest Volume dB
+    S.GUI.VolumeMax.panel = 'Stimulus settings'; S.GUI.VolumeMax.style = 'edit'; S.GUI.VolumeMax.string = 60; % Highest Volume dB
     S.GUI.DifficultyLow.panel = 'Stimulus settings'; S.GUI.DifficultyLow.style = 'edit'; S.GUI.DifficultyLow.string = 1; % Lowest difficulty
     S.GUI.DifficultyHigh.panel = 'Stimulus settings'; S.GUI.DifficultyHigh.style = 'edit'; S.GUI.DifficultyHigh.string = 1; % Highest difficulty
-    S.GUI.nDifficulties.panel = 'Stimulus settings'; S.GUI.nDifficulties.style = 'edit'; S.GUI.nDifficulties.string = 0; % Highest difficulty
-    S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0; % Overlap between tones (0 to 1) 0 meaning no overlap
-    S.GUI.ToneDuration.panel = 'Stimulus settings'; S.GUI.ToneDuration.style = 'edit'; S.GUI.ToneDuration.string = 0.03;
+    S.GUI.nDifficulties.panel = 'Stimulus settings'; S.GUI.nDifficulties.style = 'edit'; S.GUI.nDifficulties.string = 0; % Number of difficulties
+    S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0.66; % Overlap between tones (0 to 1) 0 meaning no overlap
+    S.GUI.ToneDuration.panel = 'Stimulus settings'; S.GUI.ToneDuration.style = 'edit'; S.GUI.ToneDuration.string = 0.030;
     S.GUI.NoEvidence.panel = 'Stimulus settings'; S.GUI.NoEvidence.style = 'edit'; S.GUI.NoEvidence.string = 0; % Number of tones with no evidence
-    S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'AudibleHuman'; S.GUI.AudibleHuman.value = 1;    
+    S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'Audible'; S.GUI.AudibleHuman.value = 1;    
     
     % Reward 
     S.GUI.CenterRewardAmount.panel = 'Reward settings'; S.GUI.CenterRewardAmount.style = 'edit'; S.GUI.CenterRewardAmount.string = 0.5;
@@ -67,7 +66,6 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     StimulusSettings.minFreq = minFreq;
     StimulusSettings.maxFreq = maxFreq;
     StimulusSettings.SamplingRate = 192000; % Sound card sampling rate;
-    StimulusSettings.UseMiddleOctave = S.GUI.UseMiddleOctave.string(S.GUI.UseMiddleOctave.value);
     StimulusSettings.Noevidence = S.GUI.NoEvidence.string;   
     StimulusSettings.nFreq = 18; % Number of different frequencies to sample from
     StimulusSettings.ramp = 0.005;     
@@ -77,9 +75,10 @@ end
 MaxTrials = 5000;
 TrialTypes = ceil(rand(1,MaxTrials)*2); % correct side for each trial
 EvidenceStrength = nan(1,MaxTrials); % evidence strength for each trial
+pTarget = nan(1,MaxTrials); % evidence strength for each trial
 PrestimDuration = nan(1,MaxTrials); % prestimulation delay period for each trial
 SoundDuration = nan(1,MaxTrials); % sound duration period for each trial
-MemoryDuration = nan(1,MaxTrials); % sound duration period for each trial
+MemoryDuration = nan(1,MaxTrials); % memory duration period for each trial
 Outcomes = nan(1,MaxTrials);
 AccumulatedReward=0;
 
@@ -194,8 +193,7 @@ for currentTrial = 1:MaxTrials
 
     if currentTrial==1 %start from the start
         S.GUI.PrestimDurationCurrent.string =  S.GUI.PrestimDurationStart.string;
-    end
-    
+    end    
     controlStep_nRequiredValid_Prestim = S.GUI.PrestimDurationNtrials.string;    
     
     if S.GUI.PrestimDurationStart.string<S.GUI.PrestimDurationEnd.string %step up prestim duration only if start<end
@@ -221,7 +219,7 @@ for currentTrial = 1:MaxTrials
     switch S.GUI.PrestimDistribution.value
         case 1
             PrestimDuration(currentTrial) = S.GUI.PrestimDurationCurrent.string;
-        case 2'
+        case 2
             PrestimDuration(currentTrial) = rand+S.GUI.PrestimDurationCurrent.string-0.5;
         case 3
             PrestimDuration(currentTrial) = exprnd(S.GUI.PrestimDurationCurrent.string);
@@ -294,7 +292,6 @@ for currentTrial = 1:MaxTrials
     StimulusSettings.ToneDuration = S.GUI.ToneDuration.string;
     StimulusSettings.minFreq = minFreq;
     StimulusSettings.maxFreq = maxFreq;
-    StimulusSettings.UseMiddleOctave = S.GUI.UseMiddleOctave.string(S.GUI.UseMiddleOctave.value);
     StimulusSettings.Noevidence = S.GUI.NoEvidence.string;   
     StimulusSettings.VolumeMin = S.GUI.VolumeMin.string;
     StimulusSettings.VolumeMax = S.GUI.VolumeMax.string;
@@ -410,6 +407,43 @@ for currentTrial = 1:MaxTrials
             [Sound, Cloud, Cloud_toplot] = GenerateToneCloud(TargetOctave, EvidenceStrength(currentTrial), StimulusSettings);
             PsychToolboxSoundServer('Load', 1, Sound);
             
+            % Because stimulus generation is random, we need to check trial
+            % by trial, so that the animal is rewarded by what they hear
+            if sum(Cloud>9)>sum(Cloud<9) % if more high than low tones
+                
+                pTarget(currentTrial) = sum(Cloud>9)/sum(Cloud>0);
+                            
+                TargetOctave = 'high';
+
+                if strcmp(S.GUI.FreqSide.string(S.GUI.FreqSide.value),'LowLeft')
+                   TrialTypes(currentTrial) = 2; % type 2 means reward at right 
+                else
+                   TrialTypes(currentTrial) = 1; % type 1 means reward at left
+                end
+                
+            else
+                
+                pTarget(currentTrial) = sum(Cloud<9)/sum(Cloud>0);
+                
+                TargetOctave = 'low';
+                
+                if strcmp(S.GUI.FreqSide.string(S.GUI.FreqSide.value),'LowLeft')
+                   TrialTypes(currentTrial) = 1; % type 1 means reward at left 
+                else
+                   TrialTypes(currentTrial) = 2; % type 1 means reward at right
+                end
+                
+            end
+            
+            if TrialTypes(currentTrial)==1 % type 1 means reward at left
+                LeftActionState = 'Reward'; RightActionState = 'Punish'; CorrectWithdrawalEvent = 'Port1Out';
+                ValveCode = 1; ValveTime = LeftValveTime;
+                RewardedPort = {'Port1In'};PunishedPort = {'Port3In'};
+            else                           % type 2 means reward at left
+                LeftActionState = 'Punish'; RightActionState = 'Reward'; CorrectWithdrawalEvent = 'Port3Out';
+                ValveCode = 4; ValveTime = RightValveTime;
+                RewardedPort = {'Port3In'}; PunishedPort = {'Port1In'};
+            end
             
             sma = NewStateMatrix(); % Assemble state matrix
             
@@ -421,12 +455,7 @@ for currentTrial = 1:MaxTrials
                 'Timer', PrestimDuration(currentTrial),...
                 'StateChangeConditions', {'Tup', 'DeliverStimulus', 'Port2Out', 'EarlyWithdrawal'},...
                 'OutputActions', {});
-%             sma = AddState(sma, 'Name', 'DeliverStimulus', ...
-%                 'Timer', SoundDuration(currentTrial),...
-%                 'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
-%                 'OutputActions', {'SoftCode', 1, 'BNCState', 1});
 
-%%%
             sma = AddState(sma, 'Name', 'DeliverStimulus', ...
                 'Timer', SoundDuration(currentTrial),...
                 'StateChangeConditions', {'Tup', 'Memory', 'Port2Out', 'EarlyWithdrawal'},...
@@ -436,32 +465,37 @@ for currentTrial = 1:MaxTrials
                 'Timer', MemoryDuration(currentTrial),...
                 'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
                 'OutputActions', {});
-%%%        
 
             sma = AddState(sma, 'Name', 'GoSignal', ...
                 'Timer', CenterValveTime,...
                 'StateChangeConditions', {'Tup', 'WaitForResponse'},...
                 'OutputActions', {'ValveState', CenterValveCode});
+
             sma = AddState(sma, 'Name', 'EarlyWithdrawal', ...
                 'Timer', 0,...
                 'StateChangeConditions', {'Tup', 'EarlyWithdrawalPunish'},...
                 'OutputActions', {'SoftCode', 255});
+            
             sma = AddState(sma, 'Name', 'WaitForResponse', ...
                 'Timer', S.GUI.TimeForResponse.string,...
                 'StateChangeConditions', {'Tup', 'exit', 'Port1In', LeftActionState, 'Port3In', RightActionState},...
                 'OutputActions', {});
+            
             sma = AddState(sma, 'Name', 'Reward', ...
                 'Timer', ValveTime,...
                 'StateChangeConditions', {'Tup', 'Drinking'},...
                 'OutputActions', {'ValveState', ValveCode});
+            
             sma = AddState(sma, 'Name', 'Drinking', ...
                 'Timer', 0,...
                 'StateChangeConditions', {CorrectWithdrawalEvent, 'exit'},...
                 'OutputActions', {});
+            
             sma = AddState(sma, 'Name', 'Punish', ...
                 'Timer', S.GUI.TimeoutDuration.string,...
                 'StateChangeConditions', {'Tup', 'exit'},...
                 'OutputActions', {'SoftCode', 4});
+            
             sma = AddState(sma, 'Name', 'EarlyWithdrawalPunish', ...
                 'Timer', S.GUI.TimeoutDuration.string,...
                 'StateChangeConditions', {'Tup', 'exit'},...
@@ -478,6 +512,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
         BpodSystem.Data.EvidenceStrength(currentTrial) = EvidenceStrength(currentTrial); 
+        BpodSystem.Data.pTarget(currentTrial) = pTarget(currentTrial); 
         BpodSystem.Data.PrestimDuration(currentTrial) = PrestimDuration(currentTrial); % 
         BpodSystem.Data.SoundDuration(currentTrial) = SoundDuration(currentTrial); % 
         BpodSystem.Data.MemoryDuration(currentTrial) = MemoryDuration(currentTrial); % 
@@ -490,7 +525,7 @@ for currentTrial = 1:MaxTrials
             AccumulatedReward = AccumulatedReward+S.GUI.RewardAmount.string;
             controlStep_Prestim = controlStep_Prestim+1; % update because this is a valid trial
             controlStep_Sound = controlStep_Sound+1; % update because this is a valid trial
-            controlStep_Memory = controlStep_Memory+1;
+            controlStep_Memory = controlStep_Memory+1; % update because this is a valid trial
         elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Punish(1))
             Outcomes(currentTrial) = 0;
             controlStep_Prestim = controlStep_Prestim+1; % update because this is a valid trial
@@ -531,11 +566,19 @@ PerformancePlot(BpodSystem.GUIHandles.PerformancePlot,'update',nTrials,2-TrialTy
 
 function UpdatePsychoPlot(TrialTypes, Outcomes)
 global BpodSystem
-EvidenceStrength = BpodSystem.Data.EvidenceStrength;
+%EvidenceStrength = BpodSystem.Data.EvidenceStrength;
+pTarget = BpodSystem.Data.pTarget;
 nTrials = BpodSystem.Data.nTrials;
-PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'update',nTrials,2-TrialTypes,Outcomes,EvidenceStrength);
+PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'update',nTrials,2-TrialTypes,Outcomes,pTarget);
 
 function UpdateStimulusPlot(Cloud)
 global BpodSystem
-CloudDetails.EvidenceStrength = BpodSystem.Data.EvidenceStrength(end);
+%CloudDetails.EvidenceStrength = BpodSystem.Data.EvidenceStrength(end);
+CloudDetails.pTarget = BpodSystem.Data.pTarget(end);
+if sum(BpodSystem.Data.Cloud{end}>9)>sum(BpodSystem.Data.Cloud{end}<9)
+    CloudDetails.Target = 'High';
+else
+    CloudDetails.Target = 'Low';    
+end
+
 StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'update',Cloud,CloudDetails);

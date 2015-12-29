@@ -53,7 +53,7 @@ switch Action
         title_str = [];
         fnames = fields(StimulusDetails);
         for i=1:length(fnames)
-            title_str = [title_str ' - ' fnames{i} ': ' num2str(StimulusDetails.(fnames{1}))];
+            title_str = [title_str ' ' fnames{i} ': ' num2str(StimulusDetails.(fnames{i}),'%2.2f')];
         end
         BpodSystem.GUIHandles.StimulusPlot.Title.String = title_str;
 end
