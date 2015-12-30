@@ -31,7 +31,9 @@ for x = 1:nValidMeasurements
 end
 
 % Convert g*nPulses to microliters
-CurrentAmounts = CurrentAmounts*10; % FIND ACTUAL CONV
+%CurrentAmounts = CurrentAmounts*10; % FIND ACTUAL CONV
+CurrentAmounts = CurrentAmounts*1000/str2double(handles.nPulses_edit.String); % FIND ACTUAL CONV
+
 
 if AllValid == 1
     % Update cal table on HD and in GUI handles

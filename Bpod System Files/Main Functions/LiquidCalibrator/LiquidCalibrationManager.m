@@ -41,7 +41,7 @@ function varargout = LiquidCalibrationManager(varargin)
 
 % Edit the above text to modify the response to help LiquidCalibrationManager
 
-% Last Modified by GUIDE v2.5 02-Nov-2014 16:26:37
+% Last Modified by GUIDE v2.5 30-Dec-2015 13:11:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -350,7 +350,7 @@ if ~isempty(ValveIDs)
     % Deliver liquid
     k = msgbox('Please refill liquid reservoirs and click Ok to begin.', 'modal');
     waitfor(k);
-    LiquidRewardCal(100, ValveIDs, PulseDurations, .2)
+    LiquidRewardCal(str2double(handles.nPulses_edit.String), ValveIDs, PulseDurations, .2)
     
     % Enter measurements:
     
@@ -628,3 +628,26 @@ end
 set(handles.listbox2,'String',ThisValveCalEntries);
 
 guidata(hObject, handles);
+
+
+
+function nPulses_edit_Callback(hObject, eventdata, handles)
+% hObject    handle to nPulses_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of nPulses_edit as text
+%        str2double(get(hObject,'String')) returns contents of nPulses_edit as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function nPulses_edit_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to nPulses_edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

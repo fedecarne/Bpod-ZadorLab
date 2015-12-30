@@ -40,6 +40,9 @@ for x = 1:nValves
         if isnan(ValveTimes(x))
             ValveTimes(x) = 0;
         end
+        if any(ValveTimes<0)
+            error(['Wrong liquid calibration for valve ' num2str(TargetValves(x)) '. Negative open time.'])
+        end
     end
 end
-ValveTimes = ValveTimes/1000;
+ValveTimes = ValveTimes/1000;Bpod needs at least 3 measurements
