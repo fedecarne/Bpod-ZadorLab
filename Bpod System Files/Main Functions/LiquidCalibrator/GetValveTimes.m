@@ -45,4 +45,4 @@ for x = 1:nValves
         end
     end
 end
-ValveTimes = ValveTimes/1000;Bpod needs at least 3 measurements
+ValveTimes = ValveTimes/1000; %Bpod needs at least 3 measurements

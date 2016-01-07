@@ -1,6 +1,7 @@
 #Exclude local data
 Data/
-Calibration Files/
+Calibration Files/LiquidCalibration.mat
+Calibration Files/SoundCalibration.mat
 Bpod System Files/BpodSystemSettings.mat
 
 #################
