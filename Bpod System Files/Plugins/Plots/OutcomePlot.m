@@ -91,8 +91,6 @@ switch Action
         [mn, mx] = rescaleX(AxesHandle,CurrentTrial,nTrialsToShow);
         
 
-
-        
         %axes(AxesHandle); %cla;
         %plot future trials
         FutureTrialsIndx = CurrentTrial:mx;
@@ -104,8 +102,7 @@ switch Action
         
         %plot trial difficulty 
         set(BpodSystem.GUIHandles.EvidenceStrength, 'xdata', [1:CurrentTrial-1], 'ydata', [EvidenceStrength+2]);
-        
-        
+                
         %Plot past trials
         if ~isempty(OutcomeRecord)
             indxToPlot = mn:CurrentTrial-1;
