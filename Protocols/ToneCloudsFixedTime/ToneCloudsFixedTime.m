@@ -80,6 +80,7 @@ PrestimDuration = nan(1,MaxTrials); % prestimulation delay period for each trial
 SoundDuration = nan(1,MaxTrials); % sound duration period for each trial
 MemoryDuration = nan(1,MaxTrials); % memory duration period for each trial
 Outcomes = nan(1,MaxTrials);
+Side = nan(1,MaxTrials);
 AccumulatedReward=0;
 
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
@@ -298,10 +299,19 @@ for currentTrial = 1:MaxTrials
     
     StimulusSettings.Volume = (randi(10)-1)/4*(StimulusSettings.VolumeMax-StimulusSettings.VolumeMin) + StimulusSettings.VolumeMin;
     
-    if S.GUI.Antibias.value==2 %apply antibias
-        if Outcomes(currentTrial-1)==0
-            TrialTypes(currentTrial)=TrialTypes(currentTrial-1);
+    
+    bias = nanmean(Side(1:currentTrial-1))-1; %0:left, 1:right
+    disp(['Bias (0:left,1:right): ' num2str(bias)]);
+    if S.GUI.Antibias.value==2 %apply antib;ias
+        
+        if rand<bias % this condition is met most frequently when bias is close to 1 (bias is to the right)
+            TrialTypes(currentTrial) = 1; % type 1 means reward at left 
+        else % this condition is most frequently met when bias is close to 0 (bias to the left) 
+            TrialTypes(currentTrial) = 2; % type 2 means reward at right 
         end
+%        if Outcomes(currentTrial-1)==0
+%            TrialTypes(currentTrial)=TrialTypes(currentTrial-1);
+%        end
     end
 
     switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
@@ -519,6 +529,16 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.StimulusSettings = StimulusSettings; % Save Stimulus settings
         BpodSystem.Data.Cloud{currentTrial} = Cloud; % Saves Stimulus 
         
+        
+        % Side (this works becasue in each trial once the animal goes into one port is either a reward or a punishment and then exit - there are no two ports-in in one trial)
+        if isfield(BpodSystem.Data.RawEvents.Trial{currentTrial}.Events,'Port1In') 
+            Side(currentTrial) = 1; %Left
+        elseif isfield(BpodSystem.Data.RawEvents.Trial{currentTrial}.Events,'Port3In')
+            Side(currentTrial) = 2; %Right
+        else
+            Side(currentTrial) = nan; %Invalid
+        end                      
+        
         %Outcome
         if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Reward(1))
             Outcomes(currentTrial) = 1;
@@ -536,7 +556,9 @@ for currentTrial = 1:MaxTrials
         end
         
         BpodSystem.Data.Outcomes(currentTrial) = Outcomes(currentTrial);
+        BpodSystem.Data.Side(currentTrial) = Side(currentTrial);
         BpodSystem.Data.AccumulatedReward = AccumulatedReward;
+        
         
         
         UpdateOutcomePlot(TrialTypes, Outcomes);
