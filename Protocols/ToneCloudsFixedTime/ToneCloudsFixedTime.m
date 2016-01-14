@@ -13,7 +13,7 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
         
     S.GUI.Subject.panel = 'Protocol'; S.GUI.Subject.style = 'text'; S.GUI.Subject.string = BpodSystem.GUIData.SubjectName;    
-    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 1;% Training stage
+    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 2;% Training stage
     
     % Stimulus section
     S.GUI.VolumeMin.panel = 'Stimulus settings'; S.GUI.VolumeMin.style = 'edit'; S.GUI.VolumeMin.string = 50; % Lowest volume dB
@@ -24,7 +24,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.ToneOverlap.panel = 'Stimulus settings'; S.GUI.ToneOverlap.style = 'edit'; S.GUI.ToneOverlap.string = 0.66; % Overlap between tones (0 to 1) 0 meaning no overlap
     S.GUI.ToneDuration.panel = 'Stimulus settings'; S.GUI.ToneDuration.style = 'edit'; S.GUI.ToneDuration.string = 0.030;
     S.GUI.NoEvidence.panel = 'Stimulus settings'; S.GUI.NoEvidence.style = 'edit'; S.GUI.NoEvidence.string = 0; % Number of tones with no evidence
-    S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'Audible'; S.GUI.AudibleHuman.value = 1;    
+    S.GUI.AudibleHuman.panel = 'Stimulus settings'; S.GUI.AudibleHuman.style = 'checkbox'; S.GUI.AudibleHuman.string = 'Audible'; S.GUI.AudibleHuman.value = 0;    
     
     % Reward 
     S.GUI.CenterRewardAmount.panel = 'Reward settings'; S.GUI.CenterRewardAmount.style = 'edit'; S.GUI.CenterRewardAmount.string = 0.5;
@@ -340,9 +340,9 @@ for currentTrial = 1:MaxTrials
     end
     
     
-    switch S.GUI.Stage.value
+    switch 1
         
-        case 1 % Training stage 1: Direct sides - Poke and collect water
+        case strcmp(S.GUI.Stage.string(S.GUI.Stage.value),'Direct') % Training stage 1: Direct sides - Poke and collect water
             
             S.GUI.DifficultyLow.enable = 'off';
             S.GUI.DifficultyHigh.enable = 'off';
@@ -396,7 +396,7 @@ for currentTrial = 1:MaxTrials
             SendStateMatrix(sma);
             RawEvents = RunStateMatrix;     
             
-        case 2 % Full task
+        case strcmp(S.GUI.Stage.string(S.GUI.Stage.value),'Full task') % Full task
                         
             DifficultySet = [S.GUI.DifficultyLow.string S.GUI.DifficultyLow.string:(S.GUI.DifficultyHigh.string-S.GUI.DifficultyLow.string)/(S.GUI.nDifficulties.string-1):S.GUI.DifficultyHigh.string S.GUI.DifficultyHigh.string];
             DifficultySet = unique(DifficultySet);
@@ -494,12 +494,12 @@ for currentTrial = 1:MaxTrials
             sma = AddState(sma, 'Name', 'Punish', ...
                 'Timer', S.GUI.TimeoutDuration.string,...
                 'StateChangeConditions', {'Tup', 'exit'},...
-                'OutputActions', {'SoftCode', 4});
+                'OutputActions', {'SoftCode', 3});
             
             sma = AddState(sma, 'Name', 'EarlyWithdrawalPunish', ...
                 'Timer', S.GUI.TimeoutDuration.string,...
                 'StateChangeConditions', {'Tup', 'exit'},...
-                'OutputActions', {'SoftCode', 4});
+                'OutputActions', {'SoftCode', 3});
             
             SendStateMatrix(sma);
             RawEvents = RunStateMatrix;     

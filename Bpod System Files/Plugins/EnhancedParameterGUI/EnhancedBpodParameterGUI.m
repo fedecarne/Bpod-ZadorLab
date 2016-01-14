@@ -47,10 +47,12 @@ switch Op
             switch Params.(ParamNames{x}).style
                 case 'text'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
-                    ParamValues{1,x} = Params.(ParamNames{x}).string;
+                    %ParamValues{1,x} = Params.(ParamNames{x}).string;
+                    ParamValues{1,x} = 0;
                 case 'edit'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
-                    ParamValues{1,x} = Params.(ParamNames{x}).string;
+                    %ParamValues{1,x} = Params.(ParamNames{x}).string;
+                    ParamValues{1,x} = 0;
                 case 'popupmenu'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
                     ParamValues{1,x} = Params.(ParamNames{x}).value;
@@ -105,7 +107,9 @@ switch Op
                 
                 x = indx_in_panel(j);
                 BpodSystem.GUIHandles.ParameterGUI.Labels(x) = uicontrol('Style', 'text', 'String', ParamNames{x}, 'Position', [11+(column-1)*(Width+5) Pos 2/3*(Width) 25], 'FontWeight', 'normal', 'FontSize', 12, 'BackgroundColor','white', 'FontName', 'Arial','HorizontalAlignment','Center');
-                BpodSystem.GUIHandles.ParameterGUI.ParamValues(x) = uicontrol('Style', ParamStyle{1,x}, 'String', ParamString{x}, 'Position', [10+(column-1)*(Width+5)+Width-1/3*Width Pos+5 1/4*Width 25], 'FontWeight', 'normal', 'FontSize', 12, 'FontName', 'Arial');
+                
+                %BpodSystem.GUIHandles.ParameterGUI.ParamValues(x) = uicontrol('Style', ParamStyle{1,x}, 'String', ParamString{x}, 'Position', [10+(column-1)*(Width+5)+Width-1/3*Width Pos+5 1/4*Width 25], 'FontWeight', 'normal', 'FontSize', 12, 'FontName', 'Arial');
+                BpodSystem.GUIHandles.ParameterGUI.ParamValues(x) = uicontrol('Style', ParamStyle{1,x}, 'String', ParamString{x},'Value',ParamValues{1,x}, 'Position', [10+(column-1)*(Width+5)+Width-1/3*Width Pos+5 1/4*Width 25], 'FontWeight', 'normal', 'FontSize', 12, 'FontName', 'Arial');
                 
                 Pos = Pos - 30;
             end            
