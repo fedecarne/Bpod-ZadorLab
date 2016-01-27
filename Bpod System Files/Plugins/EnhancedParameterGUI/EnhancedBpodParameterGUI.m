@@ -51,8 +51,8 @@ switch Op
                     ParamValues{1,x} = 0;
                 case 'edit'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
-                    %ParamValues{1,x} = Params.(ParamNames{x}).string;
-                    ParamValues{1,x} = 0;
+                    ParamValues{1,x} = Params.(ParamNames{x}).string;
+                    %ParamValues{1,x} = 0;
                 case 'popupmenu'
                     ParamString{1,x} = Params.(ParamNames{x}).string;
                     ParamValues{1,x} = Params.(ParamNames{x}).value;
