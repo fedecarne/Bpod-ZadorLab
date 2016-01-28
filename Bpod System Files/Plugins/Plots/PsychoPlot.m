@@ -41,7 +41,10 @@ switch Action
         CurrentTrial = varargin{1};
         SideList = varargin{2};
         OutcomeRecord = varargin{3};
-        EvidenceStrength =  varargin{4};
+        pTarget =  varargin{4};
+        
+        %pTarget = (1/2+r/2);
+        EvidenceStrength = 2*(pTarget-1/2);
         
         Xdata = BpodSystem.GUIHandles.PsychometricData(:,1);
         Ydata = BpodSystem.GUIHandles.PsychometricData(:,2);
