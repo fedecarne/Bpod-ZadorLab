@@ -8,6 +8,8 @@ function ToneCloudsFixedTime
 
 global BpodSystem
 
+addpath(genpath('/home/rig7/PulsePal'));
+
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
@@ -55,6 +57,14 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.MemoryDurationNtrials.panel = 'Memory Timing'; S.GUI.MemoryDurationNtrials.style = 'edit'; S.GUI.MemoryDurationNtrials.string = 20; % Required number of valid trials before each step
     S.GUI.MemoryDurationCurrent.panel = 'Memory Timing'; S.GUI.MemoryDurationCurrent.style = 'text'; S.GUI.MemoryDurationCurrent.string = S.GUI.MemoryDurationStart.string; % Memory duration end
     
+    S.GUI.OptoOn.panel = 'Optogenetic'; S.GUI.OptoOn.style = 'checkbox'; S.GUI.OptoOn.string = 'On'; S.GUI.OptoOn.value = 1; 
+    S.GUI.OptoProb.panel = 'Optogenetic'; S.GUI.OptoProb.style = 'edit'; S.GUI.OptoProb.string = 0.20;
+    S.GUI.OptoPulseFreq.panel = 'Optogenetic'; S.GUI.OptoPulseFreq.style = 'edit'; S.GUI.OptoPulseFreq.string = 10;
+    S.GUI.OptoPulseWidth.panel = 'Optogenetic'; S.GUI.OptoPulseWidth.style = 'edit'; S.GUI.OptoPulseWidth.string = 2;
+    S.GUI.OptoOnset.panel = 'Optogenetic'; S.GUI.OptoOnset.style = 'edit'; S.GUI.OptoOnset.string = 0;
+    S.GUI.OptoOffset.panel = 'Optogenetic'; S.GUI.OptoOffset.style = 'edit'; S.GUI.OptoOffset.string = 0.5;
+    
+    
     % Antibias
     S.GUI.Antibias.panel = 'Antibias'; S.GUI.Antibias.style = 'popupmenu'; S.GUI.Antibias.string = {'no', 'yes'}; S.GUI.Antibias.value = 1;% Training stage
     
@@ -81,6 +91,7 @@ SoundDuration = nan(1,MaxTrials); % sound duration period for each trial
 MemoryDuration = nan(1,MaxTrials); % memory duration period for each trial
 Outcomes = nan(1,MaxTrials);
 Side = nan(1,MaxTrials);
+Opto = nan(1,MaxTrials);
 AccumulatedReward=0;
 
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
@@ -162,6 +173,25 @@ end
 PsychToolboxSoundServer('init')
 PsychToolboxSoundServer('Load', 3, PunishSound);
 PsychToolboxSoundServer('Load', 4, EarlyWithdrawalSound);
+
+
+%Set up pulse pal for optogenetic stimulation
+try
+    PulsePal;
+    pulsepal_connected = 1;
+catch
+    disp('No PulsePal connected');
+    pulsepal_connected = 0;
+end
+
+if pulsepal_connected
+    load ParameterMatrix_Example;
+    ProgramPulsePal(ParameterMatrix); % Sends the default parameter matrix to Pulse Pal
+    ProgramPulsePalParam(1, 'LinkedToTriggerCH1', 0);
+    ProgramPulsePalParam(2, 'LinkedToTriggerCH1', 0);
+    ProgramPulsePalParam(3, 'LinkedToTriggerCH1', 0);
+    ProgramPulsePalParam(4, 'LinkedToTriggerCH1', 1); % Set output channel 4 to respond to trigger ch 1
+end
 
 % Set soft code handler to trigger sounds
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler_PlaySound';
@@ -309,9 +339,6 @@ for currentTrial = 1:MaxTrials
         else % this condition is most frequently met when bias is close to 0 (bias to the left) 
             TrialTypes(currentTrial) = 2; % type 2 means reward at right 
         end
-%        if Outcomes(currentTrial-1)==0
-%            TrialTypes(currentTrial)=TrialTypes(currentTrial-1);
-%        end
     end
 
     switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
