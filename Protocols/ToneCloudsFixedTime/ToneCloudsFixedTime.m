@@ -63,8 +63,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.OptoPulseWidth.panel = 'Optogenetic'; S.GUI.OptoPulseWidth.style = 'edit'; S.GUI.OptoPulseWidth.string = 2;
     S.GUI.OptoOnset.panel = 'Optogenetic'; S.GUI.OptoOnset.style = 'edit'; S.GUI.OptoOnset.string = 0;
     S.GUI.OptoOffset.panel = 'Optogenetic'; S.GUI.OptoOffset.style = 'edit'; S.GUI.OptoOffset.string = 0.5;
-    
-    
+        
     % Antibias
     S.GUI.Antibias.panel = 'Antibias'; S.GUI.Antibias.style = 'popupmenu'; S.GUI.Antibias.string = {'no', 'yes'}; S.GUI.Antibias.value = 1;% Training stage
     
@@ -513,8 +512,6 @@ for currentTrial = 1:MaxTrials
                 'StateChangeConditions', {'Tup', 'EarlyWithdrawalPunish'},...
                 'OutputActions', {'SoftCode', 255});
             
-
-            %                'StateChangeConditions', {'Tup', 'exit', 'Port1In', LeftActionState, 'Port3In', RightActionState},...
             sma = AddState(sma, 'Name', 'WaitForResponse', ...
                 'Timer', S.GUI.TimeForResponse.string,...
                 'StateChangeConditions', {'Tup', 'exit', RewardedPort, 'Reward', PunishedPort, 'Punish'},...
