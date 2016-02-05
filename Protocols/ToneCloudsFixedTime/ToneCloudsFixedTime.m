@@ -90,7 +90,8 @@ SoundDuration = nan(1,MaxTrials); % sound duration period for each trial
 MemoryDuration = nan(1,MaxTrials); % memory duration period for each trial
 Outcomes = nan(1,MaxTrials);
 Side = nan(1,MaxTrials);
-Opto = nan(1,MaxTrials);
+OptoTrial = zeros(1,MaxTrials);
+OptoSettings = cell(1,MaxTrials);
 AccumulatedReward=0;
 
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
@@ -481,6 +482,28 @@ for currentTrial = 1:MaxTrials
                 RewardedPort = {'Port3In'}; PunishedPort = {'Port1In'};
             end
             
+            
+            if pulsepal_connected
+                if S.GUI.OptoOn.value
+                    if rand<(S.GUI.OptoProb.string)
+                    
+                        OptoTrial(currentTrial) = 1;
+                        
+                        OptoSettings{currentTrial}.OptoPulseFreq = S.GUI.OptoPulseFreq.string;
+                        OptoSettings{currentTrial}.InterPulseInterval = round((1/S.GUI.OptoPulseFreq.string)*10^4)/10^4;
+                        OptoSettings{currentTrial}.OptoPulseWidth = S.GUI.OptoPulseWidth.string/1000;
+                        OptoSettings{currentTrial}.OptoDuration = S.GUI.OptoOffset.string-S.GUI.OptoOnset.string;
+                        OptoSettings{currentTrial}.OptoOnset = S.GUI.OptoOnset.string;
+                        
+                        ProgramPulsePalParam(4, 'Phase1Voltage', 1); % Set output channel 1 to produce 2.5V pulses
+                        ProgramPulsePalParam(4, 'Phase1Duration', OptoSettings{currentTrial}.OptoPulseWidth); % Set output channel 1 to produce 2ms pulses
+                        ProgramPulsePalParam(4, 'InterPulseInterval', OptoSettings{currentTrial}.InterPulseInterval); % Set pulse interval
+                        ProgramPulsePalParam(4, 'PulseTrainDuration', OptoSettings{currentTrial}.OptoDuration); % Set pulse train duration
+                        ProgramPulsePalParam(4, 'PulseTrainDelay', OptoSettings{currentTrial}.OptoOnset); % Set pulse latency from trigger                      
+                    end
+                end
+            end
+            
             sma = NewStateMatrix(); % Assemble state matrix
             
             sma = AddState(sma, 'Name', 'WaitForCenterPoke', ...
@@ -492,11 +515,18 @@ for currentTrial = 1:MaxTrials
                 'StateChangeConditions', {'Tup', 'DeliverStimulus', 'Port2Out', 'EarlyWithdrawal'},...
                 'OutputActions', {});
 
-            sma = AddState(sma, 'Name', 'DeliverStimulus', ...
-                'Timer', SoundDuration(currentTrial),...
-                'StateChangeConditions', {'Tup', 'Memory', 'Port2Out', 'EarlyWithdrawal'},...
-                'OutputActions', {'SoftCode', 1, 'BNCState', 1});
-
+            if OptoTrial(currentTrial)
+                sma = AddState(sma, 'Name', 'DeliverStimulus', ...
+                    'Timer', SoundDuration(currentTrial),...
+                    'StateChangeConditions', {'Tup', 'Memory', 'Port2Out', 'EarlyWithdrawal'},...
+                    'OutputActions', {'SoftCode', 1, 'BNCState', 1, 'BNCState', 2});
+            else
+                sma = AddState(sma, 'Name', 'DeliverStimulus', ...
+                    'Timer', SoundDuration(currentTrial),...
+                    'StateChangeConditions', {'Tup', 'Memory', 'Port2Out', 'EarlyWithdrawal'},...
+                    'OutputActions', {'SoftCode', 1, 'BNCState', 1});
+            end
+            
             sma = AddState(sma, 'Name', 'Memory', ...
                 'Timer', MemoryDuration(currentTrial),...
                 'StateChangeConditions', {'Tup', 'GoSignal', 'Port2Out', 'EarlyWithdrawal'},...
@@ -554,7 +584,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.MemoryDuration(currentTrial) = MemoryDuration(currentTrial); % 
         BpodSystem.Data.StimulusSettings = StimulusSettings; % Save Stimulus settings
         BpodSystem.Data.Cloud{currentTrial} = Cloud; % Saves Stimulus 
-        
+                        
         
         % Side (this works becasue in each trial once the animal goes into one port is either a reward or a punishment and then exit - there are no two ports-in in one trial)
         if isfield(BpodSystem.Data.RawEvents.Trial{currentTrial}.Events,'Port1In') 
@@ -584,9 +614,11 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.Outcomes(currentTrial) = Outcomes(currentTrial);
         BpodSystem.Data.Side(currentTrial) = Side(currentTrial);
         BpodSystem.Data.AccumulatedReward = AccumulatedReward;
+        BpodSystem.Data.OptoTrial(currentTrial) = OptoTrial(currentTrial);
+        BpodSystem.Data.OptoSettings(currentTrial) = OptoSettings(currentTrial);
         
         
-        
+        %Update plots
         UpdateOutcomePlot(TrialTypes, Outcomes);
         UpdatePerformancePlot(TrialTypes, Outcomes,SessionBirthdate);
         UpdatePsychoPlot(TrialTypes, Outcomes);
