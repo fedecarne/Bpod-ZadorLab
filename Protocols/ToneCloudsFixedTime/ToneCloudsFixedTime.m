@@ -121,10 +121,19 @@ BpodSystem.ProtocolFigures.PsychoPlotFig = figure('Position', [1450 100 400 300]
 BpodSystem.GUIHandles.PsychoPlot = axes('Position', [.2 .25 .75 .65]);
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'init')  %set up axes nicely
 
+
+% % BinoPlot
+% BpodSystem.ProtocolFigures.BinoPlotFig = figure('Position', [1450 100 400 300],'name','Binomial plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+% BpodSystem.GUIHandles.BinoPlot = axes('Position', [.2 .25 .75 .65]);
+% hold(BpodSystem.GUIHandles.BinoPlot,'on')
+% BinoPlot(BpodSystem.GUIHandles.BinoPlot,'init',2)  %set up axes nicely
+
 % Stimulus plot
 BpodSystem.ProtocolFigures.StimulusPlotFig = figure('Position', [457 803 500 300],'name','Stimulus plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
 BpodSystem.GUIHandles.StimulusPlot = axes('Position', [.15 .2 .75 .65]);
 StimulusPlot(BpodSystem.GUIHandles.StimulusPlot,'init',StimulusSettings.nFreq);
+
+
 
 %%% Pokes plot
 state_colors = struct( ...
@@ -251,7 +260,8 @@ for currentTrial = 1:MaxTrials
         case 1
             PrestimDuration(currentTrial) = S.GUI.PrestimDurationCurrent.string;
         case 2
-            PrestimDuration(currentTrial) = rand+S.GUI.PrestimDurationCurrent.string-0.5;
+            % uniform distribution with mean = range
+            PrestimDuration(currentTrial) = (rand+0.5)*S.GUI.PrestimDurationCurrent.string;
         case 3
             PrestimDuration(currentTrial) = exprnd(S.GUI.PrestimDurationCurrent.string);
     end
@@ -476,7 +486,7 @@ for currentTrial = 1:MaxTrials
                 LeftActionState = 'Reward'; RightActionState = 'Punish'; CorrectWithdrawalEvent = 'Port1Out';
                 ValveCode = 1; ValveTime = LeftValveTime;
                 RewardedPort = {'Port1In'};PunishedPort = {'Port3In'};
-            else                           % type 2 means reward at left
+            else                           % type 2 means reward at right
                 LeftActionState = 'Punish'; RightActionState = 'Reward'; CorrectWithdrawalEvent = 'Port3Out';
                 ValveCode = 4; ValveTime = RightValveTime;
                 RewardedPort = {'Port3In'}; PunishedPort = {'Port1In'};
@@ -586,7 +596,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.MemoryDuration(currentTrial) = MemoryDuration(currentTrial); % 
         BpodSystem.Data.StimulusSettings = StimulusSettings; % Save Stimulus settings
         BpodSystem.Data.Cloud{currentTrial} = Cloud; % Saves Stimulus 
-                        
+        BpodSystem.Data.StimulusVolume(currentTrial) = StimulusSettings.Volume;
         
         % Side (this works becasue in each trial once the animal goes into one port is either a reward or a punishment and then exit - there are no two ports-in in one trial)
         if isfield(BpodSystem.Data.RawEvents.Trial{currentTrial}.Events,'Port1In') 
@@ -624,7 +634,10 @@ for currentTrial = 1:MaxTrials
         UpdateOutcomePlot(TrialTypes, Outcomes);
         UpdatePerformancePlot(TrialTypes, Outcomes,SessionBirthdate);
         UpdatePsychoPlot(TrialTypes, Outcomes);
+%         UpdateBinoPlot();
         UpdateStimulusPlot(Cloud_toplot);
+        
+        
         
         PokesPlot('update');
         
@@ -652,6 +665,19 @@ global BpodSystem
 pTarget = BpodSystem.Data.pTarget;
 nTrials = BpodSystem.Data.nTrials;
 PsychoPlot(BpodSystem.GUIHandles.PsychoPlot,'update',nTrials,2-TrialTypes,Outcomes,pTarget);
+
+
+% function UpdateBinoPlot()
+% global BpodSystem
+% 
+% %pTarget = (1/2+r/2);
+% %EvidenceStrength = 2*(pTarget-1/2);
+% Predictor = {(2*BpodSystem.Data.pTarget-1).*(2*BpodSystem.Data.TrialTypes-3);...
+%              (BpodSystem.Data.StimulusVolume-55)/10};
+% Response = BpodSystem.Data.Side;
+% Valid = BpodSystem.Data.Outcomes>=0;
+% BinoPlot(BpodSystem.GUIHandles.PsychoPlot,'update',Predictor,Response,Valid);        
+        
 
 function UpdateStimulusPlot(Cloud)
 global BpodSystem
