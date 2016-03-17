@@ -15,7 +15,7 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
         
     S.GUI.Subject.panel = 'Protocol'; S.GUI.Subject.style = 'text'; S.GUI.Subject.string = BpodSystem.GUIData.SubjectName;    
-    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full task'}; S.GUI.Stage.value = 2;% Training stage
+    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full 1', 'Full 2', 'Full 3'}; S.GUI.Stage.value = 2;% Training stage
     
     % Stimulus section
     S.GUI.VolumeMin.panel = 'Stimulus settings'; S.GUI.VolumeMin.style = 'edit'; S.GUI.VolumeMin.string = 50; % Lowest volume dB
@@ -45,9 +45,9 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.PrestimDurationNtrials.panel = 'Prestim Timing'; S.GUI.PrestimDurationNtrials.style = 'edit'; S.GUI.PrestimDurationNtrials.string = 20; % Required number of valid trials before each step    
     S.GUI.PrestimDurationCurrent.panel = 'Prestim Timing'; S.GUI.PrestimDurationCurrent.style = 'text'; S.GUI.PrestimDurationCurrent.string = S.GUI.PrestimDurationStart.string; % Prestim duration end    
     
-    S.GUI.SoundDurationStart.panel = 'Stimulus Timing'; S.GUI.SoundDurationStart.style = 'edit'; S.GUI.SoundDurationStart.string = 0.050; % Sound duration start
+    S.GUI.SoundDurationStart.panel = 'Stimulus Timing'; S.GUI.SoundDurationStart.style = 'edit'; S.GUI.SoundDurationStart.string = 0.1; % Sound duration start
     S.GUI.SoundDurationEnd.panel = 'Stimulus Timing'; S.GUI.SoundDurationEnd.style = 'edit'; S.GUI.SoundDurationEnd.string = 0.500; % Sound duration end
-    S.GUI.SoundDurationStep.panel = 'Stimulus Timing'; S.GUI.SoundDurationStep.style = 'edit'; S.GUI.SoundDurationStep.string = 0.050; % Sound duration end
+    S.GUI.SoundDurationStep.panel = 'Stimulus Timing'; S.GUI.SoundDurationStep.style = 'edit'; S.GUI.SoundDurationStep.string = 0.1; % Sound duration step
     S.GUI.SoundDurationNtrials.panel = 'Stimulus Timing'; S.GUI.SoundDurationNtrials.style = 'edit'; S.GUI.SoundDurationNtrials.string = 20; % Required number of valid trials before each step
     S.GUI.SoundDurationCurrent.panel = 'Stimulus Timing'; S.GUI.SoundDurationCurrent.style = 'text'; S.GUI.SoundDurationCurrent.string = S.GUI.SoundDurationStart.string; % Sound duration end
     
@@ -443,8 +443,47 @@ for currentTrial = 1:MaxTrials
             SendStateMatrix(sma);
             RawEvents = RunStateMatrix;     
             
-        case strcmp(S.GUI.Stage.string(S.GUI.Stage.value),'Full task') % Full task
+        case strfind(S.GUI.Stage.string(S.GUI.Stage.value),'Full') % Full task
                         
+  
+            switch 1
+
+                case strfind(S.GUI.Stage.string{S.GUI.Stage.value}(6),'1')
+                % Full 1: no punish sound, no timeout, sound duration ramping up in 40 trials, prestim 0.05 delta 
+                % (until it does reasonable number of trials)
+
+                    S.GUI.PunishSound.value = 0;
+                    S.GUI.TimeoutDuration.string = 0;
+                    S.GUI.SoundDurationNtrials.string = 40;
+                    S.GUI.PrestimDistribution.value = 1;
+                    S.GUI.PrestimDurationEnd.string = 0.050; % Prestim duration end
+    
+                case strfind(S.GUI.Stage.string{S.GUI.Stage.value}(6),'2')
+                % Full 2: punish sound, 4s timeout, sound duration ramping up in 20 trials, prestim 0.1 uniform 
+                % (until gets the association)
+            
+                    S.GUI.PunishSound.value = 1;
+                    S.GUI.TimeoutDuration.string = 4;
+                    S.GUI.SoundDurationNtrials.string = 20;
+                    S.GUI.PrestimDistribution.value = 2;
+                    S.GUI.PrestimDurationEnd.string = 0.10; % Prestim duration end
+                    S.GUI.PrestimDurationNtrials.string = 20; % Required number of valid trials before each step    
+             
+                case strfind(S.GUI.Stage.string{S.GUI.Stage.value}(6),'3')
+                % Full 3: sound duration ramping up 2 trials, prestim 0.25 uniform
+                % (until the end, increasing difficulty)
+                
+                    S.GUI.PunishSound.value = 1;
+                    S.GUI.TimeoutDuration.string = 4;
+                    S.GUI.SoundDurationNtrials.string = 2;
+                    S.GUI.PrestimDistribution.value = 2;
+                    S.GUI.PrestimDurationEnd.string = 0.25; % Prestim duration end
+                    S.GUI.PrestimDurationNtrials.string = 2; % Required number of valid trials before each step    
+
+            end
+            
+            S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
+            
             DifficultySet = [S.GUI.DifficultyLow.string S.GUI.DifficultyLow.string:(S.GUI.DifficultyHigh.string-S.GUI.DifficultyLow.string)/(S.GUI.nDifficulties.string-1):S.GUI.DifficultyHigh.string S.GUI.DifficultyHigh.string];
             DifficultySet = unique(DifficultySet);
 
