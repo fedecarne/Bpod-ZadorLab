@@ -15,7 +15,7 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
         
     S.GUI.Subject.panel = 'Protocol'; S.GUI.Subject.style = 'text'; S.GUI.Subject.string = BpodSystem.GUIData.SubjectName;    
-    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full 1', 'Full 2', 'Full 3'}; S.GUI.Stage.value = 2;% Training stage
+    S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Full 1', 'Full 2', 'Full 3', 'Full 4', 'Full 5', 'Full 6'}; S.GUI.Stage.value = 2;% Training stage
     
     % Stimulus section
     S.GUI.VolumeMin.panel = 'Stimulus settings'; S.GUI.VolumeMin.style = 'edit'; S.GUI.VolumeMin.string = 50; % Lowest volume dB
@@ -480,6 +480,44 @@ for currentTrial = 1:MaxTrials
                     S.GUI.PrestimDurationEnd.string = 0.25; % Prestim duration end
                     S.GUI.PrestimDurationNtrials.string = 2; % Required number of valid trials before each step    
 
+               case strfind(S.GUI.Stage.string{S.GUI.Stage.value}(6),'4')
+                % Full 4: lower diff= 0.7, n_diff=3
+                
+                    S.GUI.PunishSound.value = 1;
+                    S.GUI.TimeoutDuration.string = 4;
+                    S.GUI.SoundDurationNtrials.string = 2;
+                    S.GUI.PrestimDistribution.value = 2;
+                    S.GUI.PrestimDurationEnd.string = 0.25; % Prestim duration end
+                    S.GUI.PrestimDurationNtrials.string = 2; % Required number of valid trials before each step    
+
+                    S.GUI.DifficultyLow.string = 0.7; % Lowest difficulty
+                    S.GUI.nDifficulties.string = 3;
+                    
+               case strfind(S.GUI.Stage.string{S.GUI.Stage.value}(6),'5')
+                % Full 5: lower diff= 0.5, n_diff=3
+                
+                    S.GUI.PunishSound.value = 1;
+                    S.GUI.TimeoutDuration.string = 4;
+                    S.GUI.SoundDurationNtrials.string = 2;
+                    S.GUI.PrestimDistribution.value = 2;
+                    S.GUI.PrestimDurationEnd.string = 0.25; % Prestim duration end
+                    S.GUI.PrestimDurationNtrials.string = 2; % Required number of valid trials before each step    
+
+                    S.GUI.DifficultyLow.string = 0.5; % Lowest difficulty
+                    S.GUI.nDifficulties.string = 3;
+                    
+               case strfind(S.GUI.Stage.string{S.GUI.Stage.value}(6),'6')
+                % Full 6: lower diff= 0.3, n_diff=5
+                
+                    S.GUI.PunishSound.value = 1;
+                    S.GUI.TimeoutDuration.string = 4;
+                    S.GUI.SoundDurationNtrials.string = 2;
+                    S.GUI.PrestimDistribution.value = 2;
+                    S.GUI.PrestimDurationEnd.string = 0.25; % Prestim duration end
+                    S.GUI.PrestimDurationNtrials.string = 2; % Required number of valid trials before each step    
+
+                    S.GUI.DifficultyLow.string = 0.3; % Lowest difficulty
+                    S.GUI.nDifficulties.string = 3;
             end
             
             S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
