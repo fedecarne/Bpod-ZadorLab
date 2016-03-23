@@ -504,7 +504,7 @@ for currentTrial = 1:MaxTrials
                     S.GUI.PrestimDurationNtrials.string = 2; % Required number of valid trials before each step    
 
                     S.GUI.DifficultyLow.string = 0.5; % Lowest difficulty
-                    S.GUI.nDifficulties.string = 3;
+                    S.GUI.nDifficulties.string = 5;
                     
                case strfind(S.GUI.Stage.string{S.GUI.Stage.value}(6),'6')
                 % Full 6: lower diff= 0.3, n_diff=5
@@ -517,7 +517,7 @@ for currentTrial = 1:MaxTrials
                     S.GUI.PrestimDurationNtrials.string = 2; % Required number of valid trials before each step    
 
                     S.GUI.DifficultyLow.string = 0.3; % Lowest difficulty
-                    S.GUI.nDifficulties.string = 3;
+                    S.GUI.nDifficulties.string = 5;
             end
             
             S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
