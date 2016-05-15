@@ -199,16 +199,30 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.TrialRewarded(currentTrial) = TrialRewarded(currentTrial); % Adds the trial type of the current trial to data
         
         %Outcome
-        if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Drinking(1))
-            Outcomes(currentTrial) = 1;
-        elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Wrong(1))
-            Outcomes(currentTrial) = 0;
-        elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Unrewarded(1))
-            Outcomes(currentTrial) = 2;
-        else
-            Outcomes(currentTrial) = 3;
+        switch 1
+
+        case strfind(S.GUI.Stage.string(S.GUI.Stage.value),'Direct')
+            
+            if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Drinking(1))
+                Outcomes(currentTrial) = 1;
+            else
+                Outcomes(currentTrial) = 0;
+            end
+            
+        case strfind(S.GUI.Stage.string(S.GUI.Stage.value),'Task') % Full task    
+            
+            if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Drinking(1))
+                Outcomes(currentTrial) = 1;
+            elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Wrong(1))
+                Outcomes(currentTrial) = 0;
+            elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Unrewarded(1))
+                Outcomes(currentTrial) = 2;
+            else
+                Outcomes(currentTrial) = 3;
+            end
+            
         end
-                
+        
         BpodSystem.Data.Outcomes(currentTrial) = Outcomes(currentTrial);
         
         UpdateOutcomePlot(TrialTypes, Outcomes);
