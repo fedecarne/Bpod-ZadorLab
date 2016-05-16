@@ -55,8 +55,8 @@ MaxTrials = 5000;
 
 TrialTypes = nan(1,MaxTrials);
 
-BlockLengthMin = 3;
-BlockLengthMax = 5;
+BlockLengthMin = 7;
+BlockLengthMax = 23;
 i=0; 
 while i<MaxTrials
 
