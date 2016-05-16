@@ -39,9 +39,9 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Task'};S.GUI.Stage.value = 2;
         
     S.GUI.RewardAmount.panel = 'Reward'; S.GUI.RewardAmount.style = 'edit'; S.GUI.RewardAmount.string = 3;    
-    S.GUI.RewardProbability.panel = 'Reward'; S.GUI.RewardProbability.style = 'edit'; S.GUI.RewardProbability.string = 0.75;    
+    S.GUI.RewardProbability.panel = 'Reward'; S.GUI.RewardProbability.style = 'edit'; S.GUI.RewardProbability.string = 1;    
     
-    S.GUI.CueDelay.panel = 'Trial Structure'; S.GUI.CueDelay.style = 'edit'; S.GUI.CueDelay.string = 0.2;    
+    S.GUI.CueDelay.panel = 'Trial Structure'; S.GUI.CueDelay.style = 'edit'; S.GUI.CueDelay.string = 0.02;    
     S.GUI.ResponseTime.panel = 'Trial Structure'; S.GUI.ResponseTime.style = 'edit'; S.GUI.ResponseTime.string = 5;
     S.GUI.PunishDelay.panel = 'Trial Structure'; S.GUI.PunishDelay.style = 'edit'; S.GUI.PunishDelay.string = 0;    
     
