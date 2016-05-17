@@ -39,6 +39,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Task'};S.GUI.Stage.value = 2;
         
     S.GUI.RewardAmount.panel = 'Reward'; S.GUI.RewardAmount.style = 'edit'; S.GUI.RewardAmount.string = 3;    
+    S.GUI.CenterRewardAmount.panel = 'Reward'; S.GUI.CenterRewardAmount.style = 'edit'; S.GUI.CenterRewardAmount.string = 0.5;
     S.GUI.RewardProbability.panel = 'Reward'; S.GUI.RewardProbability.style = 'edit'; S.GUI.RewardProbability.string = 1;    
     
     S.GUI.CueDelay.panel = 'Trial Structure'; S.GUI.CueDelay.style = 'edit'; S.GUI.CueDelay.string = 0.02;    
@@ -49,6 +50,10 @@ end
 
 % Initialize parameter GUI plugin
 EnhancedBpodParameterGUI('init', S);
+
+% Total Reward display (online display of the total amount of liquid reward earned)
+TotalRewardDisplay('init');
+
 
 %% Define trials
 MaxTrials = 5000;
@@ -89,6 +94,7 @@ for currentTrial = 1:MaxTrials
     
     S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
     R = GetValveTimes(S.GUI.RewardAmount.string, [1 3]); LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
+    C = GetValveTimes(S.GUI.CenterRewardAmount.string, 2); CenterValveTime = C(1);
     
     switch 1
         case strfind(S.GUI.Stage.string(S.GUI.Stage.value),'Direct')
@@ -122,7 +128,7 @@ for currentTrial = 1:MaxTrials
             ValveState = 4;
     end
     
-    
+    CenterValveState = 2;
     sma = NewStateMatrix(); % Assemble state matrix
     
     
@@ -162,8 +168,12 @@ for currentTrial = 1:MaxTrials
                 'OutputActions', {}); 
             sma = AddState(sma, 'Name', 'CenterDelay', ...
                 'Timer', S.GUI.CueDelay.string,...
-                'StateChangeConditions', {'Port2Out', 'WaitForCenterPoke', 'Tup', 'WaitForCenterOut'},...
+                'StateChangeConditions', {'Port2Out', 'WaitForCenterPoke', 'Tup', 'CenterReward'},...
                 'OutputActions', {});
+            sma = AddState(sma, 'Name', 'CenterReward', ...
+                'Timer', CenterValveTime,...
+                'StateChangeConditions', {'Tup', 'WaitForCenterOut'},...
+                'OutputActions', {'ValveState', CenterValveState});
             sma = AddState(sma, 'Name', 'WaitForCenterOut', ...
                 'Timer', 0,...
                 'StateChangeConditions', {'Port2Out', 'WaitForResponse'},...
@@ -224,7 +234,7 @@ for currentTrial = 1:MaxTrials
         end
         
         BpodSystem.Data.Outcomes(currentTrial) = Outcomes(currentTrial);
-        
+        UpdateTotalRewardDisplay(S.GUI.RewardAmount.string, currentTrial);
         UpdateOutcomePlot(TrialTypes, Outcomes);
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
     end
@@ -239,3 +249,10 @@ global BpodSystem
 EvidenceStrength = 0;
 nTrials = BpodSystem.Data.nTrials;
 OutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',nTrials+1,2-TrialTypes,Outcomes,EvidenceStrength);
+
+function UpdateTotalRewardDisplay(RewardAmount, currentTrial)
+% If rewarded based on the state data, update the TotalRewardDisplay
+global BpodSystem
+    if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Reward(1))
+        TotalRewardDisplay('add', RewardAmount);
+    end
