@@ -38,14 +38,17 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
         
     S.GUI.Stage.panel = 'Protocol'; S.GUI.Stage.style = 'popupmenu'; S.GUI.Stage.string = {'Direct', 'Task'};S.GUI.Stage.value = 2;
         
-    S.GUI.RewardAmount.panel = 'Reward'; S.GUI.RewardAmount.style = 'edit'; S.GUI.RewardAmount.string = 3;    
+    S.GUI.RewardAmount.panel = 'Reward'; S.GUI.RewardAmount.style = 'edit'; S.GUI.RewardAmount.string = 3;        
     S.GUI.CenterRewardAmount.panel = 'Reward'; S.GUI.CenterRewardAmount.style = 'edit'; S.GUI.CenterRewardAmount.string = 0.5;
     S.GUI.RewardProbability.panel = 'Reward'; S.GUI.RewardProbability.style = 'edit'; S.GUI.RewardProbability.string = 1;    
     
+    S.GUI.BlockLengthMin.panel = 'Trial Structure'; S.GUI.BlockLengthMin.style = 'edit'; S.GUI.BlockLengthMin.string = 20;
+    S.GUI.BlockLengthMax.panel = 'Trial Structure'; S.GUI.BlockLengthMax.style = 'edit'; S.GUI.BlockLengthMax.string = 30;
     S.GUI.CueDelay.panel = 'Trial Structure'; S.GUI.CueDelay.style = 'edit'; S.GUI.CueDelay.string = 0.02;    
     S.GUI.ResponseTime.panel = 'Trial Structure'; S.GUI.ResponseTime.style = 'edit'; S.GUI.ResponseTime.string = 5;
     S.GUI.PunishDelay.panel = 'Trial Structure'; S.GUI.PunishDelay.style = 'edit'; S.GUI.PunishDelay.string = 0;    
     
+    S.GUI.LightCue.panel = 'Trial Structure'; S.GUI.LightCue.style = 'checkbox'; S.GUI.LightCue.string = 'Light Cue'; S.GUI.LightCue.value = 1;
 end
 
 % Initialize parameter GUI plugin
@@ -57,11 +60,16 @@ TotalRewardDisplay('init');
 
 %% Define trials
 MaxTrials = 5000;
-
 TrialTypes = nan(1,MaxTrials);
 
-BlockLengthMin = 7;
-BlockLengthMax = 23;
+BpodSystem.ProtocolFigures.InitialMsg = msgbox({'', ' Edit your settings and click OK when you are ready to start!     ', ''},'ToneCloud Protocol...');
+uiwait(BpodSystem.ProtocolFigures.InitialMsg);
+
+S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
+
+BlockLengthMax = S.GUI.BlockLengthMax.string;
+BlockLengthMin = S.GUI.BlockLengthMin.string;
+
 i=0; 
 while i<MaxTrials
 
@@ -90,7 +98,10 @@ OutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',2-TrialTypes);
 
 
 %% Main trial loop
+BlockIndex=1;
+
 for currentTrial = 1:MaxTrials
+    
     
     S = EnhancedBpodParameterGUI('sync', S); % Sync parameters with EnhancedBpodParameterGUI plugin
     R = GetValveTimes(S.GUI.RewardAmount.string, [1 3]); LeftValveTime = R(1); RightValveTime = R(2); % Update reward amounts
@@ -112,6 +123,7 @@ for currentTrial = 1:MaxTrials
                 LeftActionState = 'Unrewarded';
                 TrialRewarded(currentTrial)=0;
             end
+            LightOn = 'PWM1';
             RightActionState = 'Wrong';
             ValveTime = LeftValveTime;
             ValveState = 1;
@@ -123,6 +135,7 @@ for currentTrial = 1:MaxTrials
                 RightActionState = 'Unrewarded';
                 TrialRewarded(currentTrial)=0;
             end
+            LightOn = 'PWM3';
             LeftActionState = 'Wrong';
             ValveTime = RightValveTime;
             ValveState = 4;
@@ -162,26 +175,47 @@ for currentTrial = 1:MaxTrials
                 'OutputActions', {});
         
         case strfind(S.GUI.Stage.string(S.GUI.Stage.value),'Task') % Full task
+            
             sma = AddState(sma, 'Name', 'WaitForCenterPoke', ...
                 'Timer', 0,...
                 'StateChangeConditions', {'Port2In', 'CenterDelay'},...
-                'OutputActions', {}); 
+                'OutputActions', {'PWM2', 255}); 
             sma = AddState(sma, 'Name', 'CenterDelay', ...
                 'Timer', S.GUI.CueDelay.string,...
                 'StateChangeConditions', {'Port2Out', 'WaitForCenterPoke', 'Tup', 'CenterReward'},...
-                'OutputActions', {});
-            sma = AddState(sma, 'Name', 'CenterReward', ...
-                'Timer', CenterValveTime,...
-                'StateChangeConditions', {'Tup', 'WaitForCenterOut'},...
-                'OutputActions', {'ValveState', CenterValveState});
-            sma = AddState(sma, 'Name', 'WaitForCenterOut', ...
-                'Timer', 0,...
-                'StateChangeConditions', {'Port2Out', 'WaitForResponse'},...
-                'OutputActions', {});
-            sma = AddState(sma, 'Name', 'WaitForResponse', ...
-                'Timer', S.GUI.ResponseTime.string,...
-                'StateChangeConditions', {'Port1In', LeftActionState, 'Port3In', RightActionState, 'Tup', 'exit'},...
-                'OutputActions', {}); 
+                'OutputActions', {'PWM2', 255});
+            
+            if S.GUI.LightCue.value
+            
+                sma = AddState(sma, 'Name', 'CenterReward', ...
+                    'Timer', CenterValveTime,...
+                    'StateChangeConditions', {'Tup', 'WaitForCenterOut'},...
+                    'OutputActions', {'ValveState', CenterValveState, LightOn, 255});
+                sma = AddState(sma, 'Name', 'WaitForCenterOut', ...
+                    'Timer', 0,...
+                    'StateChangeConditions', {'Port2Out', 'WaitForResponse'},...
+                    'OutputActions', {LightOn, 255});            
+                sma = AddState(sma, 'Name', 'WaitForResponse', ...
+                    'Timer', S.GUI.ResponseTime.string,...
+                    'StateChangeConditions', {'Port1In', LeftActionState, 'Port3In', RightActionState, 'Tup', 'exit'},...
+                    'OutputActions', {LightOn, 255}); 
+            else
+            
+                sma = AddState(sma, 'Name', 'CenterReward', ...
+                    'Timer', CenterValveTime,...
+                    'StateChangeConditions', {'Tup', 'WaitForCenterOut'},...
+                    'OutputActions', {'ValveState', CenterValveState,'PWM1', 255, 'PWM3', 255});
+                sma = AddState(sma, 'Name', 'WaitForCenterOut', ...
+                    'Timer', 0,...
+                    'StateChangeConditions', {'Port2Out', 'WaitForResponse'},...
+                    'OutputActions', {'PWM1', 255, 'PWM3', 255});            
+                sma = AddState(sma, 'Name', 'WaitForResponse', ...
+                    'Timer', S.GUI.ResponseTime.string,...
+                    'StateChangeConditions', {'Port1In', LeftActionState, 'Port3In', RightActionState, 'Tup', 'exit'},...
+                    'OutputActions', {'PWM1', 255, 'PWM3', 255});                
+                
+            end
+            
             sma = AddState(sma, 'Name', 'Reward', ...
                 'Timer', ValveTime,...
                 'StateChangeConditions', {'Tup', 'Drinking'},...
